@@ -19,16 +19,23 @@ class _LoginScreenState extends State<LoginScreen> {
   bool _loading = false;
   bool _obscure = true;
   bool _biometricAvailable = false;
+  bool _hasExistingSession = false;  // tambahan
 
   @override
   void initState() {
     super.initState();
-    _checkBiometric();
+    _checkBiometricAndSession();
   }
 
-  Future<void> _checkBiometric() async {
+  Future<void> _checkBiometricAndSession() async {
     final available = await AuthService.instance.isBiometricAvailable();
-    if (mounted) setState(() => _biometricAvailable = available);
+    final userId = await AuthService.instance.getCurrentUserId();
+    if (mounted) {
+      setState(() {
+        _biometricAvailable = available;
+        _hasExistingSession = userId != null; // true jika sudah pernah login
+      });
+    }
   }
 
   Future<void> _login() async {
@@ -50,13 +57,18 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   Future<void> _biometricLogin() async {
+    // Pastikan ada session sebelumnya
     final userId = await AuthService.instance.getCurrentUserId();
     if (userId == null) {
       _showError('Silakan login dengan email terlebih dahulu');
       return;
     }
     final ok = await AuthService.instance.loginWithBiometric();
-    if (ok) _toHome();
+    if (ok) {
+      _toHome();
+    } else {
+      _showError('Autentikasi biometrik gagal');
+    }
   }
 
   void _showError(String msg) {
@@ -157,7 +169,8 @@ class _LoginScreenState extends State<LoginScreen> {
                                 child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
                             : const Text('Masuk', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
                       ),
-                      if (_biometricAvailable) ...[
+                      // Biometrik hanya muncul jika device mendukung DAN sudah pernah login
+                      if (_biometricAvailable && _hasExistingSession) ...[
                         const SizedBox(height: 12),
                         OutlinedButton.icon(
                           onPressed: _biometricLogin,
