@@ -320,60 +320,93 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildLBSCard() {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: AppTheme.cardBg,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppTheme.nebulaGreen.withOpacity(0.3)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Row(
-            children: [
-              Text('📍', style: TextStyle(fontSize: 16)),
-              SizedBox(width: 8),
-              Text('Rekomendasi Berdasarkan Lokasi', style: TextStyle(color: AppTheme.nebulaGreen, fontSize: 14, fontWeight: FontWeight.w600)),
-            ],
-          ),
-          const SizedBox(height: 8),
-          if (_loadingLocation)
-            const Text('Mencari lokasi...', style: TextStyle(color: Color(0xFF9CA3AF)))
-          else if (_position == null)
-            const Text('Izin lokasi diperlukan untuk rekomendasi rasi bintang', style: TextStyle(color: Color(0xFF9CA3AF)))
-          else ...[
-            Text(LocationService.instance.getLocationName(_position!.latitude, _position!.longitude), style: const TextStyle(color: Color(0xFF9CA3AF), fontSize: 12)),
+    Future<void> _askLocationPermission() async {
+      // Cek layanan lokasi
+      bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
+      if (!serviceEnabled) {
+        await Geolocator.openLocationSettings();
+        _loadLocation();
+        return;
+      }
+      LocationPermission permission = await Geolocator.checkPermission();
+      if (permission == LocationPermission.denied) {
+        permission = await Geolocator.requestPermission();
+        if (permission == LocationPermission.denied) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Izin lokasi diperlukan untuk fitur ini', style: TextStyle(color: Colors.white)), backgroundColor: AppTheme.marsRed),
+          );
+          return;
+        }
+      }
+      if (permission == LocationPermission.deniedForever) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Izin lokasi ditolak permanen, silakan aktifkan di pengaturan', style: TextStyle(color: Colors.white)), backgroundColor: AppTheme.marsRed),
+        );
+        return;
+      }
+      await _loadLocation();
+    }
+
+    return GestureDetector(
+      onTap: () async {
+        if (_position == null && !_loadingLocation) {
+          await _askLocationPermission();
+        } else if (_position != null) {
+          Navigator.push(context, MaterialPageRoute(builder: (_) => const SkyMapScreen()));
+        }
+      },
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: AppTheme.cardBg,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: AppTheme.nebulaGreen.withOpacity(0.3)),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Row(
+              children: [
+                Text('📍', style: TextStyle(fontSize: 16)),
+                SizedBox(width: 8),
+                Text('Rekomendasi Berdasarkan Lokasi', style: TextStyle(color: AppTheme.nebulaGreen, fontSize: 14, fontWeight: FontWeight.w600)),
+              ],
+            ),
             const SizedBox(height: 8),
-            if (_constellation != null)
-              Row(
-                children: [
-                  Text(_constellation!['emoji'], style: const TextStyle(fontSize: 28)),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(_constellation!['name'], style: const TextStyle(color: AppTheme.starlight, fontSize: 16, fontWeight: FontWeight.w700)),
-                        Text(_constellation!['desc'], style: const TextStyle(color: Color(0xFF9CA3AF), fontSize: 12)),
-                      ],
+            if (_loadingLocation)
+              const Text('Mencari lokasi...', style: TextStyle(color: Color(0xFF9CA3AF)))
+            else if (_position == null)
+              const Text('Ketuk untuk mengaktifkan izin lokasi', style: TextStyle(color: AppTheme.nebulaGreen, fontSize: 12))
+            else ...[
+              Text(LocationService.instance.getLocationName(_position!.latitude, _position!.longitude), style: const TextStyle(color: Color(0xFF9CA3AF), fontSize: 12)),
+              const SizedBox(height: 8),
+              if (_constellation != null)
+                Row(
+                  children: [
+                    Text(_constellation!['emoji'], style: const TextStyle(fontSize: 28)),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(_constellation!['name'], style: const TextStyle(color: AppTheme.starlight, fontSize: 16, fontWeight: FontWeight.w700)),
+                          Text(_constellation!['desc'], style: const TextStyle(color: Color(0xFF9CA3AF), fontSize: 12)),
+                        ],
+                      ),
                     ),
-                  ),
-                ],
-              ),
-            const SizedBox(height: 8),
-            GestureDetector(
-              onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const SkyMapScreen())),
-              child: const Row(
+                  ],
+                ),
+              const SizedBox(height: 8),
+              const Row(
                 children: [
                   Text('Lihat di Peta Langit', style: TextStyle(color: AppTheme.nebulaGreen, fontWeight: FontWeight.w600, fontSize: 13)),
                   SizedBox(width: 4),
                   Icon(Icons.arrow_forward, color: AppTheme.nebulaGreen, size: 16),
                 ],
               ),
-            ),
+            ],
           ],
-        ],
+        ),
       ),
     );
   }
