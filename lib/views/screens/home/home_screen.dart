@@ -1,7 +1,7 @@
 // lib/views/screens/home/home_screen.dart
 import 'dart:math';
 import 'package:flutter/material.dart';
-import 'package:geolocator/geolocator.dart';  // <-- tambahkan ini
+import 'package:geolocator/geolocator.dart';
 import '../../../services/local/database_helper.dart';
 import '../../../services/local/auth_service.dart';
 import '../../../services/local/location_service.dart';
@@ -37,17 +37,14 @@ class _HomeScreenState extends State<HomeScreen> {
     _loadData();
     _loadLocation();
     _scheduleDailyNotif();
+    _refreshFact(); // ambil fakta random pertama kali
   }
 
   Future<void> _loadData() async {
     final userId = await AuthService.instance.getCurrentUserId();
     if (userId == null) return;
     final user = await DatabaseHelper.instance.getUserById(userId);
-    final fact = AppConstants.randomFacts[Random().nextInt(AppConstants.randomFacts.length)];
-    if (mounted) setState(() {
-      _user = user;
-      _fact = fact;
-    });
+    if (mounted) setState(() {_user = user;});
   }
 
   Future<void> _loadLocation() async {
@@ -69,7 +66,9 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   void _refreshFact() {
-    setState(() => _fact = AppConstants.randomFacts[Random().nextInt(AppConstants.randomFacts.length)]);
+    setState(() {
+      _fact = AppConstants.randomFacts[Random().nextInt(AppConstants.randomFacts.length)];
+    });
   }
 
   @override
@@ -97,15 +96,13 @@ class _HomeScreenState extends State<HomeScreen> {
                 children: [
                   _buildHeader(name, greeting),
                   const SizedBox(height: 20),
-                  _buildHighlightCard(),
+                  _buildFactCard(), // <-- Card fakta astronomi yang menarik
                   const SizedBox(height: 20),
                   const SectionTitle(title: '🚀 Jelajahi Materi'),
                   const SizedBox(height: 12),
                   _buildMenuGrid(),
                   const SizedBox(height: 20),
                   _buildBuyStarCard(),
-                  const SizedBox(height: 20),
-                  _buildFactCard(),
                   const SizedBox(height: 20),
                   _buildLBSCard(),
                   const SizedBox(height: 80),
@@ -135,9 +132,9 @@ class _HomeScreenState extends State<HomeScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('$greeting, $name! 👋',
+              Text('$greeting, $name!',
                   style: const TextStyle(color: AppTheme.starlight, fontSize: 17, fontWeight: FontWeight.w700)),
-              const Text('Selamat belajar astronomi 🌌', style: TextStyle(color: Color(0xFF9CA3AF), fontSize: 13)),
+              const Text('Mari kita pelajari rahasia tata surya bersama 🌌', style: TextStyle(color: Color(0xFF9CA3AF), fontSize: 13)),
             ],
           ),
         ),
@@ -151,60 +148,119 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildHighlightCard() {
-    return GradientCard(
-      colors: const [Color(0xFF1E3A5F), Color(0xFF0D1B3E)],
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
+  // Card fakta astronomi dengan desain menarik (gradient, icon, refresh button)
+  Widget _buildFactCard() {
+    return Container(
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          colors: [Color(0xFF1E3A5F), Color(0xFF0D1B3E)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppTheme.cardBorder),
+      ),
+      child: Material(
+        color: Colors.transparent,
+        borderRadius: BorderRadius.circular(16),
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                decoration: BoxDecoration(
-                  color: AppTheme.solarGold.withOpacity(0.2),
-                  borderRadius: BorderRadius.circular(20),
-                  border: Border.all(color: AppTheme.solarGold.withOpacity(0.5)),
-                ),
-                child: const Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(Icons.flash_on, color: AppTheme.solarGold, size: 12),
-                    SizedBox(width: 4),
-                    Text('Fenomena Hari Ini', style: TextStyle(color: AppTheme.solarGold, fontSize: 11, fontWeight: FontWeight.w600)),
-                  ],
-                ),
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: AppTheme.solarGold.withOpacity(0.2),
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(color: AppTheme.solarGold.withOpacity(0.5)),
+                    ),
+                    child: const Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(Icons.auto_awesome, color: AppTheme.solarGold, size: 12),
+                        SizedBox(width: 4),
+                        Text('Fakta Astronomi',
+                            style: TextStyle(color: AppTheme.solarGold, fontSize: 11, fontWeight: FontWeight.w600)),
+                      ],
+                    ),
+                  ),
+                  const Spacer(),
+                  GestureDetector(
+                    onTap: _refreshFact,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: AppTheme.solarGold.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: const Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(Icons.refresh, color: AppTheme.solarGold, size: 14),
+                          SizedBox(width: 4),
+                          Text('Fakta Lainnya', style: TextStyle(color: AppTheme.solarGold, fontSize: 11)),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Container(
+                    width: 48,
+                    height: 48,
+                    decoration: BoxDecoration(
+                      color: AppTheme.cosmicPurple.withOpacity(0.2),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: const Center(
+                      child: Text('💡', style: TextStyle(fontSize: 28)),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'Tahukah Kamu?',
+                          style: TextStyle(
+                            color: AppTheme.starlight,
+                            fontSize: 16,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          _fact,
+                          style: const TextStyle(color: Color(0xFF9CA3AF), fontSize: 13, height: 1.4),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              // Opsional: menampilkan sumber atau ikon interaktif
+              Row(
+                children: [
+                  Icon(Icons.lightbulb_outline, size: 12, color: AppTheme.auroraBlue),
+                  const SizedBox(width: 4),
+                  const Text(
+                    'Sumber: Astronomi & NASA',
+                    style: TextStyle(color: AppTheme.auroraBlue, fontSize: 10),
+                  ),
+                ],
               ),
             ],
           ),
-          const SizedBox(height: 12),
-          const Row(
-            children: [
-              Text('☄️', style: TextStyle(fontSize: 28)),
-              SizedBox(width: 10),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text('Hujan Meteor Perseid Aktif!', style: TextStyle(color: AppTheme.starlight, fontSize: 16, fontWeight: FontWeight.w700)),
-                    Text('Puncak: 11-13 Agustus, hingga 100 meteor/jam', style: TextStyle(color: Color(0xFF9CA3AF), fontSize: 12)),
-                  ],
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          InkWell(
-            onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const GerhanaListScreen())),
-            child: const Row(
-              children: [
-                Text('Lihat Detail', style: TextStyle(color: AppTheme.auroraBlue, fontWeight: FontWeight.w600, fontSize: 13)),
-                SizedBox(width: 4),
-                Icon(Icons.arrow_forward, color: AppTheme.auroraBlue, size: 16),
-              ],
-            ),
-          ),
-        ],
+        ),
       ),
     );
   }
@@ -258,46 +314,6 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           ),
           Icon(Icons.arrow_forward_ios, color: Colors.white54, size: 16),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildFactCard() {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: AppTheme.cardBg,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppTheme.solarGold.withOpacity(0.3)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              const Text('💡', style: TextStyle(fontSize: 16)),
-              const SizedBox(width: 8),
-              const Expanded(child: Text('Fakta Astronomi', style: TextStyle(color: AppTheme.solarGold, fontSize: 14, fontWeight: FontWeight.w600))),
-              GestureDetector(
-                onTap: _refreshFact,
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                  decoration: BoxDecoration(color: AppTheme.solarGold.withOpacity(0.1), borderRadius: BorderRadius.circular(20)),
-                  child: const Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(Icons.refresh, color: AppTheme.solarGold, size: 14),
-                      SizedBox(width: 4),
-                      Text('Refresh', style: TextStyle(color: AppTheme.solarGold, fontSize: 12)),
-                    ],
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          Text(_fact, style: const TextStyle(color: AppTheme.starlight, fontSize: 15, fontWeight: FontWeight.w500)),
         ],
       ),
     );
