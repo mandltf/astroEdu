@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import '../../../services/local/auth_service.dart';
 import '../../../utils/app_theme.dart';
 import '../../widgets/star_background.dart';
-import '../home/main_screen.dart';
+import 'login_screen.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -46,10 +46,15 @@ class _RegisterScreenState extends State<RegisterScreen> {
       _showError(result?['error'] ?? 'Pendaftaran gagal');
     } else {
       if (mounted) {
-        Navigator.pushAndRemoveUntil(
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Pendaftaran berhasil! Silakan login.'),
+            backgroundColor: AppTheme.nebulaGreen,
+          ),
+        );
+        Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (_) => const MainScreen()),
-          (route) => false,
+          MaterialPageRoute(builder: (_) => const LoginScreen()),
         );
       }
     }
