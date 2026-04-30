@@ -1,7 +1,7 @@
 // lib/utils/constants.dart
 class AppConstants {
   // Gemini API Key - ganti dengan API key kamu
-  static const String geminiApiKey = 'YOUR_GEMINI_API_KEY';
+  static const String geminiApiKey = 'AIzaSyA6UKhLRegc9KYcl1HDLwh-UVZBoOyMH8M';
   
   // Currency API
   static const String currencyApiUrl = 'https://api.exchangerate-api.com/v4/latest/USD';
