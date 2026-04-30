@@ -33,7 +33,6 @@ class _PlanetListScreenState extends State<PlanetListScreen> {
   }
 
   Future<void> _initData() async {
-    // Buat PlanetModel dari data statis constants
     _planets = AppConstants.planetList.map((data) {
       return PlanetModel(
         id: data['id'],
@@ -64,9 +63,7 @@ class _PlanetListScreenState extends State<PlanetListScreen> {
     for (int i = 0; i < _planets.length; i++) {
       final id = 'item_$i';
       readMap[id] = await DatabaseHelper.instance.isItemRead(_userId!, 'planet', id);
-      unlockMap[id] = i == 0
-          ? true
-          : await DatabaseHelper.instance.isItemUnlocked(_userId!, 'planet', id);
+      unlockMap[id] = i == 0 ? true : await DatabaseHelper.instance.isItemUnlocked(_userId!, 'planet', id);
     }
     if (mounted) setState(() {
       _readMap = readMap;
@@ -91,7 +88,6 @@ class _PlanetListScreenState extends State<PlanetListScreen> {
       final wiki = await DataController.instance.getWikiData(planet.apiId);
       if (wiki != null) {
         planet.wikiData = wiki;
-        // tidak mengubah planet.description
       }
     }
 
@@ -122,7 +118,7 @@ class _PlanetListScreenState extends State<PlanetListScreen> {
       MaterialPageRoute(
         builder: (_) => QuizScreen(
           category: 'planet',
-          items: _planets.map((p) => {'name': p.name, 'description': p.description}).toList(),
+          items: _planets.map((p) => {'name': p.name, 'description': p.wikiData?['extract'] ?? p.description}).toList(),
           userId: _userId!,
         ),
       ),
@@ -131,6 +127,95 @@ class _PlanetListScreenState extends State<PlanetListScreen> {
 
   bool get _allRead => _planets.asMap().entries.every((e) => _readMap['item_${e.key}'] ?? false);
 
+  Widget _buildQuizCard() {
+    final unlocked = _allRead;
+    return GestureDetector(
+      onTap: () {
+        if (unlocked) {
+          _openQuiz();
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('🔒 Selesaikan semua materi planet untuk membuka kuis!'),
+              backgroundColor: AppTheme.marsRed,
+            ),
+          );
+        }
+      },
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 10, left: 16, right: 16),
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: unlocked ? AppTheme.cardBg : AppTheme.deepSpace,
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(
+            color: unlocked ? AppTheme.solarGold : AppTheme.cardBorder.withOpacity(0.3),
+            width: unlocked ? 1.5 : 1,
+          ),
+          gradient: unlocked
+              ? LinearGradient(
+                  colors: [AppTheme.solarGold.withOpacity(0.1), Colors.transparent],
+                )
+              : null,
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 52, height: 52,
+              decoration: BoxDecoration(
+                color: unlocked ? AppTheme.solarGold.withOpacity(0.2) : Colors.grey.withOpacity(0.2),
+                shape: BoxShape.circle,
+              ),
+              child: Center(
+                child: unlocked
+                    ? const Icon(Icons.quiz, color: AppTheme.solarGold, size: 28)
+                    : const Icon(Icons.lock, color: Color(0xFF6B7280), size: 24),
+              ),
+            ),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Text(
+                        '🎯 Kuis Planet',
+                        style: TextStyle(
+                          color: unlocked ? AppTheme.starlight : const Color(0xFF6B7280),
+                          fontSize: 16,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                      if (unlocked) ...[
+                        const SizedBox(width: 6),
+                        const Icon(Icons.auto_awesome, color: AppTheme.solarGold, size: 16),
+                      ],
+                    ],
+                  ),
+                  Text(
+                    unlocked
+                        ? 'Uji pemahamanmu tentang planet-planet di tata surya'
+                        : 'Selesaikan semua materi planet untuk membuka kuis',
+                    style: TextStyle(
+                      color: unlocked ? const Color(0xFF9CA3AF) : const Color(0xFF4B5563),
+                      fontSize: 12,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Icon(
+              unlocked ? Icons.arrow_forward_ios : Icons.lock,
+              color: unlocked ? AppTheme.solarGold : const Color(0xFF4B5563),
+              size: 16,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final filtered = _search.isEmpty
@@ -138,15 +223,7 @@ class _PlanetListScreenState extends State<PlanetListScreen> {
         : _planets.where((p) => p.name.toLowerCase().contains(_search.toLowerCase())).toList();
 
     return Scaffold(
-      appBar: AstroAppBar(
-        title: '🪐 Planet',
-        actions: [
-          IconButton(
-            icon: Icon(Icons.quiz_outlined, color: _allRead ? AppTheme.solarGold : Colors.grey),
-            onPressed: _openQuiz,
-          ),
-        ],
-      ),
+      appBar: AstroAppBar(title: '🪐 Planet'),
       body: StarBackground(
         child: _loading
             ? const Center(child: CircularProgressIndicator())
@@ -206,7 +283,7 @@ class _PlanetListScreenState extends State<PlanetListScreen> {
                   const SizedBox(height: 12),
                   Expanded(
                     child: ListView.builder(
-                      padding: const EdgeInsets.fromLTRB(16, 0, 16, 80),
+                      padding: const EdgeInsets.fromLTRB(0, 0, 0, 0),
                       itemCount: filtered.length,
                       itemBuilder: (_, i) {
                         final planet = filtered[i];
@@ -214,11 +291,13 @@ class _PlanetListScreenState extends State<PlanetListScreen> {
                         final id = 'item_$index';
                         final isRead = _readMap[id] ?? false;
                         final isUnlocked = _unlockMap[id] ?? (index == 0);
+                        final previewText = planet.wikiData?['extract'] ?? planet.description;
+                        final displayText = previewText.length > 60 ? '${previewText.substring(0, 60)}...' : previewText;
 
                         return GestureDetector(
                           onTap: () => _openItem(index),
                           child: Container(
-                            margin: const EdgeInsets.only(bottom: 10),
+                            margin: const EdgeInsets.only(bottom: 10, left: 16, right: 16),
                             padding: const EdgeInsets.all(14),
                             decoration: BoxDecoration(
                               color: isUnlocked ? AppTheme.cardBg : AppTheme.deepSpace,
@@ -263,9 +342,7 @@ class _PlanetListScreenState extends State<PlanetListScreen> {
                                         ],
                                       ),
                                       Text(
-                                        (planet.wikiData?['extract'] ?? planet.description).length > 60
-                                            ? '${(planet.wikiData?['extract'] ?? planet.description).substring(0, 60)}...'
-                                            : (planet.wikiData?['extract'] ?? planet.description),
+                                        displayText,
                                         style: TextStyle(
                                           color: isUnlocked ? const Color(0xFF9CA3AF) : const Color(0xFF4B5563),
                                           fontSize: 12,
@@ -286,6 +363,8 @@ class _PlanetListScreenState extends State<PlanetListScreen> {
                       },
                     ),
                   ),
+                  _buildQuizCard(),
+                  const SizedBox(height: 80),
                 ],
               ),
       ),
