@@ -1,5 +1,7 @@
 // lib/views/screens/profile/profile_screen.dart
+import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 import '../../../services/local/auth_service.dart';
 import '../../../services/local/database_helper.dart';
 import '../../../utils/app_theme.dart';
@@ -14,7 +16,7 @@ class ProfileScreen extends StatefulWidget {
   State<ProfileScreen> createState() => _ProfileScreenState();
 }
 
-class _ProfileScreenState extends State<ProfileScreen> {
+class _ProfileScreenState extends State<ProfileScreen> with WidgetsBindingObserver {
   Map<String, dynamic>? _user;
   List<Map<String, dynamic>> _quizScores = [];
   List<Map<String, dynamic>> _boughtStars = [];
@@ -25,13 +27,39 @@ class _ProfileScreenState extends State<ProfileScreen> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    _loadProfile();
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  // Reload data ketika aplikasi kembali ke foreground (atau setelah halaman lain ditutup)
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      _loadProfile();
+    }
+  }
+
+  // Reload data setiap kali halaman profil ditampilkan (setelah navigasi kembali)
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Panggil _loadProfile setiap kali dependencies berubah (misal kembali dari halaman kuis)
     _loadProfile();
   }
 
   Future<void> _loadProfile() async {
     final userId = await AuthService.instance.getCurrentUserId();
     if (userId == null) {
-      setState(() => _loading = false);
+      setState(() {
+        _loading = false;
+        _user = null;
+      });
       return;
     }
     final user = await DatabaseHelper.instance.getUserById(userId);
@@ -46,6 +74,103 @@ class _ProfileScreenState extends State<ProfileScreen> {
       _kesan = sk?['kesan'] ?? '';
       _loading = false;
     });
+  }
+
+  Future<void> _updateUserField(String field, String newValue) async {
+    final userId = _user?['id'];
+    if (userId == null) return;
+    await DatabaseHelper.instance.updateUser(userId, {field: newValue});
+    await _loadProfile(); // refresh data
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('$field berhasil diubah'), backgroundColor: AppTheme.nebulaGreen),
+      );
+    }
+  }
+
+  Future<void> _editName() async {
+    final TextEditingController controller = TextEditingController(text: _user!['name']);
+    final result = await showDialog<String>(
+      context: context,
+      builder: (_) => AlertDialog(
+        backgroundColor: AppTheme.cardBg,
+        title: const Text('Ubah Nama', style: TextStyle(color: AppTheme.starlight)),
+        content: TextField(
+          controller: controller,
+          style: const TextStyle(color: AppTheme.starlight),
+          decoration: const InputDecoration(labelText: 'Nama baru'),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Batal', style: TextStyle(color: AppTheme.marsRed)),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context, controller.text.trim()),
+            child: const Text('Simpan'),
+          ),
+        ],
+      ),
+    );
+    if (result != null && result.isNotEmpty && result != _user!['name']) {
+      await _updateUserField('name', result);
+    }
+  }
+
+  Future<void> _editEmail() async {
+    final TextEditingController controller = TextEditingController(text: _user!['email']);
+    final result = await showDialog<String>(
+      context: context,
+      builder: (_) => AlertDialog(
+        backgroundColor: AppTheme.cardBg,
+        title: const Text('Ubah Email', style: TextStyle(color: AppTheme.starlight)),
+        content: TextField(
+          controller: controller,
+          style: const TextStyle(color: AppTheme.starlight),
+          decoration: const InputDecoration(labelText: 'Email baru'),
+          keyboardType: TextInputType.emailAddress,
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Batal', style: TextStyle(color: AppTheme.marsRed)),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context, controller.text.trim()),
+            child: const Text('Simpan'),
+          ),
+        ],
+      ),
+    );
+    if (result != null && result.isNotEmpty && result != _user!['email']) {
+      // Cek apakah email sudah dipakai user lain
+      final existing = await DatabaseHelper.instance.getUserByEmail(result);
+      if (existing != null && existing['id'] != _user!['id']) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Email sudah terdaftar'), backgroundColor: AppTheme.marsRed),
+        );
+        return;
+      }
+      await _updateUserField('email', result);
+    }
+  }
+
+  Future<void> _editPhoto() async {
+    final picker = ImagePicker();
+    final XFile? pickedFile = await picker.pickImage(source: ImageSource.gallery);
+    if (pickedFile != null) {
+      // Simpan path gambar ke database (opsional, kita simpan path lokal)
+      // Untuk sederhana, kita hanya tampilkan gambar dari file lokal
+      final userId = _user!['id'];
+      // Pindahkan file ke direktori aplikasi agar tidak hilang? Bisa juga simpan path absolut sementara.
+      // Karena tidak ada folder khusus, kita simpan path asli (tidak permanen jika file dipindah). Alternatif: simpan ke internal storage.
+      // Di sini kita cukup simpan path ke database agar bisa ditampilkan.
+      await DatabaseHelper.instance.updateUser(userId, {'photo_path': pickedFile.path});
+      await _loadProfile();
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Foto profil diperbarui'), backgroundColor: AppTheme.nebulaGreen),
+      );
+    }
   }
 
   Future<void> _saveSaranKesan() async {
@@ -104,23 +229,55 @@ class _ProfileScreenState extends State<ProfileScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              // Bagian foto profil + edit
               Row(
                 children: [
-                  Container(
-                    width: 70, height: 70,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      gradient: const LinearGradient(colors: [AppTheme.auroraBlue, AppTheme.cosmicPurple]),
+                  GestureDetector(
+                    onTap: _editPhoto,
+                    child: Container(
+                      width: 70, height: 70,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        gradient: const LinearGradient(colors: [AppTheme.auroraBlue, AppTheme.cosmicPurple]),
+                      ),
+                      child: ClipOval(
+                        child: _user!['photo_path'] != null && File(_user!['photo_path']).existsSync()
+                            ? Image.file(File(_user!['photo_path']), fit: BoxFit.cover, width: 70, height: 70)
+                            : const Icon(Icons.person, size: 40, color: Colors.white),
+                      ),
                     ),
-                    child: const Icon(Icons.person, size: 40, color: Colors.white),
                   ),
                   const SizedBox(width: 16),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(_user!['name'], style: const TextStyle(color: AppTheme.starlight, fontSize: 20, fontWeight: FontWeight.w700)),
-                        Text(_user!['email'], style: const TextStyle(color: Color(0xFF9CA3AF))),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: Text(_user!['name'], style: const TextStyle(color: AppTheme.starlight, fontSize: 20, fontWeight: FontWeight.w700)),
+                            ),
+                            IconButton(
+                              icon: const Icon(Icons.edit, size: 18, color: AppTheme.auroraBlue),
+                              onPressed: _editName,
+                              padding: EdgeInsets.zero,
+                              constraints: const BoxConstraints(),
+                            ),
+                          ],
+                        ),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: Text(_user!['email'], style: const TextStyle(color: Color(0xFF9CA3AF))),
+                            ),
+                            IconButton(
+                              icon: const Icon(Icons.edit, size: 16, color: AppTheme.auroraBlue),
+                              onPressed: _editEmail,
+                              padding: EdgeInsets.zero,
+                              constraints: const BoxConstraints(),
+                            ),
+                          ],
+                        ),
                       ],
                     ),
                   ),
@@ -181,18 +338,23 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 decoration: const InputDecoration(labelText: 'Kesan menggunakan AstroEdu'),
               ),
               const SizedBox(height: 16),
-              ElevatedButton(
-                onPressed: _saveSaranKesan,
-                child: const Text('Simpan Saran & Kesan'),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: _saveSaranKesan,
+                  child: const Text('Simpan Saran & Kesan'),
+                ),
               ),
               const SizedBox(height: 24),
-              OutlinedButton(
-                onPressed: _logout,
-                style: OutlinedButton.styleFrom(
-                  side: const BorderSide(color: AppTheme.marsRed),
-                  minimumSize: const Size(double.infinity, 45),
+              SizedBox(
+                width: double.infinity,
+                child: OutlinedButton(
+                  onPressed: _logout,
+                  style: OutlinedButton.styleFrom(
+                    side: const BorderSide(color: AppTheme.marsRed),
+                  ),
+                  child: const Text('Logout', style: TextStyle(color: AppTheme.marsRed)),
                 ),
-                child: const Text('Logout', style: TextStyle(color: AppTheme.marsRed)),
               ),
               const SizedBox(height: 40),
             ],
