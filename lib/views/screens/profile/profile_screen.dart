@@ -37,7 +37,6 @@ class _ProfileScreenState extends State<ProfileScreen> with WidgetsBindingObserv
     super.dispose();
   }
 
-  // Reload data ketika aplikasi kembali ke foreground (atau setelah halaman lain ditutup)
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed) {
@@ -45,11 +44,9 @@ class _ProfileScreenState extends State<ProfileScreen> with WidgetsBindingObserv
     }
   }
 
-  // Reload data setiap kali halaman profil ditampilkan (setelah navigasi kembali)
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    // Panggil _loadProfile setiap kali dependencies berubah (misal kembali dari halaman kuis)
     _loadProfile();
   }
 
@@ -76,11 +73,25 @@ class _ProfileScreenState extends State<ProfileScreen> with WidgetsBindingObserv
     });
   }
 
+  /// Menghitung rata-rata nilai kuis dalam persen
+  double _getAverageScore() {
+    if (_quizScores.isEmpty) return 0.0;
+    double totalPercent = 0.0;
+    for (var score in _quizScores) {
+      int correct = score['score'];
+      int total = score['total'];
+      if (total > 0) {
+        totalPercent += (correct / total) * 100;
+      }
+    }
+    return totalPercent / _quizScores.length;
+  }
+
   Future<void> _updateUserField(String field, String newValue) async {
     final userId = _user?['id'];
     if (userId == null) return;
     await DatabaseHelper.instance.updateUser(userId, {field: newValue});
-    await _loadProfile(); // refresh data
+    await _loadProfile();
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('$field berhasil diubah'), backgroundColor: AppTheme.nebulaGreen),
@@ -101,14 +112,8 @@ class _ProfileScreenState extends State<ProfileScreen> with WidgetsBindingObserv
           decoration: const InputDecoration(labelText: 'Nama baru'),
         ),
         actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Batal', style: TextStyle(color: AppTheme.marsRed)),
-          ),
-          ElevatedButton(
-            onPressed: () => Navigator.pop(context, controller.text.trim()),
-            child: const Text('Simpan'),
-          ),
+          TextButton(onPressed: () => Navigator.pop(context), child: const Text('Batal', style: TextStyle(color: AppTheme.marsRed))),
+          ElevatedButton(onPressed: () => Navigator.pop(context, controller.text.trim()), child: const Text('Simpan')),
         ],
       ),
     );
@@ -131,19 +136,12 @@ class _ProfileScreenState extends State<ProfileScreen> with WidgetsBindingObserv
           keyboardType: TextInputType.emailAddress,
         ),
         actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Batal', style: TextStyle(color: AppTheme.marsRed)),
-          ),
-          ElevatedButton(
-            onPressed: () => Navigator.pop(context, controller.text.trim()),
-            child: const Text('Simpan'),
-          ),
+          TextButton(onPressed: () => Navigator.pop(context), child: const Text('Batal', style: TextStyle(color: AppTheme.marsRed))),
+          ElevatedButton(onPressed: () => Navigator.pop(context, controller.text.trim()), child: const Text('Simpan')),
         ],
       ),
     );
     if (result != null && result.isNotEmpty && result != _user!['email']) {
-      // Cek apakah email sudah dipakai user lain
       final existing = await DatabaseHelper.instance.getUserByEmail(result);
       if (existing != null && existing['id'] != _user!['id']) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -159,12 +157,7 @@ class _ProfileScreenState extends State<ProfileScreen> with WidgetsBindingObserv
     final picker = ImagePicker();
     final XFile? pickedFile = await picker.pickImage(source: ImageSource.gallery);
     if (pickedFile != null) {
-      // Simpan path gambar ke database (opsional, kita simpan path lokal)
-      // Untuk sederhana, kita hanya tampilkan gambar dari file lokal
       final userId = _user!['id'];
-      // Pindahkan file ke direktori aplikasi agar tidak hilang? Bisa juga simpan path absolut sementara.
-      // Karena tidak ada folder khusus, kita simpan path asli (tidak permanen jika file dipindah). Alternatif: simpan ke internal storage.
-      // Di sini kita cukup simpan path ke database agar bisa ditampilkan.
       await DatabaseHelper.instance.updateUser(userId, {'photo_path': pickedFile.path});
       await _loadProfile();
       ScaffoldMessenger.of(context).showSnackBar(
@@ -221,6 +214,8 @@ class _ProfileScreenState extends State<ProfileScreen> with WidgetsBindingObserv
       );
     }
 
+    final avgScore = _getAverageScore();
+
     return Scaffold(
       appBar: AstroAppBar(title: '👤 Profil Saya'),
       body: StarBackground(
@@ -229,7 +224,6 @@ class _ProfileScreenState extends State<ProfileScreen> with WidgetsBindingObserv
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Bagian foto profil + edit
               Row(
                 children: [
                   GestureDetector(
@@ -254,28 +248,14 @@ class _ProfileScreenState extends State<ProfileScreen> with WidgetsBindingObserv
                       children: [
                         Row(
                           children: [
-                            Expanded(
-                              child: Text(_user!['name'], style: const TextStyle(color: AppTheme.starlight, fontSize: 20, fontWeight: FontWeight.w700)),
-                            ),
-                            IconButton(
-                              icon: const Icon(Icons.edit, size: 18, color: AppTheme.auroraBlue),
-                              onPressed: _editName,
-                              padding: EdgeInsets.zero,
-                              constraints: const BoxConstraints(),
-                            ),
+                            Expanded(child: Text(_user!['name'], style: const TextStyle(color: AppTheme.starlight, fontSize: 20, fontWeight: FontWeight.w700))),
+                            IconButton(icon: const Icon(Icons.edit, size: 18, color: AppTheme.auroraBlue), onPressed: _editName, padding: EdgeInsets.zero, constraints: const BoxConstraints()),
                           ],
                         ),
                         Row(
                           children: [
-                            Expanded(
-                              child: Text(_user!['email'], style: const TextStyle(color: Color(0xFF9CA3AF))),
-                            ),
-                            IconButton(
-                              icon: const Icon(Icons.edit, size: 16, color: AppTheme.auroraBlue),
-                              onPressed: _editEmail,
-                              padding: EdgeInsets.zero,
-                              constraints: const BoxConstraints(),
-                            ),
+                            Expanded(child: Text(_user!['email'], style: const TextStyle(color: Color(0xFF9CA3AF)))),
+                            IconButton(icon: const Icon(Icons.edit, size: 16, color: AppTheme.auroraBlue), onPressed: _editEmail, padding: EdgeInsets.zero, constraints: const BoxConstraints()),
                           ],
                         ),
                       ],
@@ -296,8 +276,8 @@ class _ProfileScreenState extends State<ProfileScreen> with WidgetsBindingObserv
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceAround,
                   children: [
-                    _statItem('Kuis', _quizScores.length),
-                    _statItem('Bintang Dibeli', _boughtStars.length),
+                    _statItem('Jumlah Kuis', _quizScores.length),
+                    _statItem('Rata-rata Nilai', avgScore.round()),
                   ],
                 ),
               ),
@@ -338,24 +318,9 @@ class _ProfileScreenState extends State<ProfileScreen> with WidgetsBindingObserv
                 decoration: const InputDecoration(labelText: 'Kesan menggunakan AstroEdu'),
               ),
               const SizedBox(height: 16),
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: _saveSaranKesan,
-                  child: const Text('Simpan Saran & Kesan'),
-                ),
-              ),
+              SizedBox(width: double.infinity, child: ElevatedButton(onPressed: _saveSaranKesan, child: const Text('Simpan Saran & Kesan'))),
               const SizedBox(height: 24),
-              SizedBox(
-                width: double.infinity,
-                child: OutlinedButton(
-                  onPressed: _logout,
-                  style: OutlinedButton.styleFrom(
-                    side: const BorderSide(color: AppTheme.marsRed),
-                  ),
-                  child: const Text('Logout', style: TextStyle(color: AppTheme.marsRed)),
-                ),
-              ),
+              SizedBox(width: double.infinity, child: OutlinedButton(onPressed: _logout, style: OutlinedButton.styleFrom(side: const BorderSide(color: AppTheme.marsRed)), child: const Text('Logout', style: TextStyle(color: AppTheme.marsRed)))),
               const SizedBox(height: 40),
             ],
           ),
