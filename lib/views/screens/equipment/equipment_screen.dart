@@ -18,7 +18,7 @@ class _EquipmentScreenState extends State<EquipmentScreen> {
       'description': 'Cocok untuk pemula, melihat bulan, planet terang, dan gugus bintang.',
       'price_usd': 89.99,
       'icon': '🔭',
-      'image': 'assets/images/teropong70mm.jpg',
+      'image': 'assets/images/teropong70mm.jpg', // placeholder, nanti pakai asset lokal
     },
     {
       'name': 'Teleskop 130EQ',
@@ -110,15 +110,12 @@ class _EquipmentScreenState extends State<EquipmentScreen> {
         child: _loadingRates
             ? const Center(child: CircularProgressIndicator())
             : GridView.builder(
-                padding: const EdgeInsets.all(12),
+                padding: const EdgeInsets.all(16),
                 gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                   crossAxisCount: 2,
-                  crossAxisSpacing: 12,
-                  mainAxisSpacing: 12,
-                  // Ubah childAspectRatio menjadi lebih besar (1.1) agar grid lebih tinggi
-                  // Nilai childAspectRatio = lebar / tinggi
-                  // 0.9 = lebih pendek, 1.1 = lebih tinggi
-                  childAspectRatio: 0.85, // Diperbesar agar grid lebih tinggi
+                  crossAxisSpacing: 16,
+                  mainAxisSpacing: 16,
+                  childAspectRatio: 0.8,
                 ),
                 itemCount: _equipments.length,
                 itemBuilder: (context, index) {
@@ -131,68 +128,47 @@ class _EquipmentScreenState extends State<EquipmentScreen> {
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisSize: MainAxisSize.min, // Hindari overflow
                       children: [
-                        // Container gambar dengan aspect ratio tetap
-                        ClipRRect(
-                          borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
-                          child: AspectRatio(
-                            aspectRatio: 1.0, // Kotak 1:1 untuk gambar
-                            child: Image.asset(
-                              item['image'],
-                              fit: BoxFit.cover,
-                              width: double.infinity,
-                              errorBuilder: (_, __, ___) => Container(
-                                color: AppTheme.deepSpace,
-                                child: Center(
-                                  child: Text(
-                                    item['icon'],
-                                    style: const TextStyle(fontSize: 40),
-                                  ),
-                                ),
-                              ),
-                            ),
+                        // Ikon besar atau gambar placeholder
+                        Container(
+                          height: 130,
+                          width: double.infinity,
+                          decoration: BoxDecoration(
+                            borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+                            color: AppTheme.deepSpace,
+                          ),
+                          child: Image.asset(
+                            item['image'],
+                            fit: BoxFit.cover,
+                            width: double.infinity,
+                            height: 120,
+                            errorBuilder: (_, __, ___) => Text(item['icon'], style: const TextStyle(fontSize: 48)),
                           ),
                         ),
-                        // Konten teks
-                        Expanded(
-                          child: Padding(
-                            padding: const EdgeInsets.all(10),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Text(
-                                  item['name'],
-                                  style: const TextStyle(
-                                    color: AppTheme.starlight,
-                                    fontSize: 13,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                  maxLines: 2,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                                const SizedBox(height: 4),
-                                Text(
-                                  item['description'],
-                                  style: const TextStyle(
-                                    color: Color(0xFF9CA3AF),
-                                    fontSize: 10,
-                                  ),
-                                  maxLines: 2,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                                const SizedBox(height: 6),
-                                Text(
-                                  _formatPrice(item['price_usd']),
-                                  style: const TextStyle(
-                                    color: AppTheme.solarGold,
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.w700,
-                                  ),
-                                ),
-                              ],
-                            ),
+                        Padding(
+                          padding: const EdgeInsets.all(10),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                item['name'],
+                                style: const TextStyle(color: AppTheme.starlight, fontSize: 14, fontWeight: FontWeight.bold),
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                item['description'],
+                                style: const TextStyle(color: Color(0xFF9CA3AF), fontSize: 11),
+                                maxLines: 3,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                              const SizedBox(height: 8),
+                              Text(
+                                _formatPrice(item['price_usd']),
+                                style: const TextStyle(color: AppTheme.solarGold, fontSize: 14, fontWeight: FontWeight.w700),
+                              ),
+                            ],
                           ),
                         ),
                       ],

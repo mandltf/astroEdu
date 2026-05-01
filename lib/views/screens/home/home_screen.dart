@@ -392,7 +392,7 @@ class _HomeScreenState extends State<HomeScreen> {
       physics: const NeverScrollableScrollPhysics(),
       mainAxisSpacing: 16,
       crossAxisSpacing: 16,
-      childAspectRatio: 0.8,
+      childAspectRatio: 1.5,
       children: menus.map((m) {
         final color = m['color'] as Color;
         return GestureDetector(
