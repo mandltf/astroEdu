@@ -115,10 +115,7 @@ class _EquipmentScreenState extends State<EquipmentScreen> {
                   crossAxisCount: 2,
                   crossAxisSpacing: 12,
                   mainAxisSpacing: 12,
-                  // Ubah childAspectRatio agar grid lebih tinggi (0.7 = lebih tinggi dari 0.8)
-                  // Rumus: childAspectRatio = lebar / tinggi
-                  // Semakin kecil nilainya, semakin tinggi grid
-                  childAspectRatio: 0.7,
+                  childAspectRatio: 0.75, // Diubah dari 0.7 menjadi 0.75 (grid lebih pendek, space lebih sedikit)
                 ),
                 itemCount: _equipments.length,
                 itemBuilder: (context, index) {
@@ -131,40 +128,38 @@ class _EquipmentScreenState extends State<EquipmentScreen> {
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisSize: MainAxisSize.min,
                       children: [
-                        // Gambar dengan tinggi yang lebih kecil (90)
+                        // Gambar
                         ClipRRect(
                           borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
                           child: Image.asset(
                             item['image'],
-                            height: 100, // Dikurangi dari 130 menjadi 100
+                            height: 110, // Dinaikkan sedikit biar gambar proporsional
                             width: double.infinity,
                             fit: BoxFit.cover,
                             errorBuilder: (_, __, ___) => Container(
-                              height: 100,
+                              height: 110,
                               color: AppTheme.deepSpace,
                               child: Center(
                                 child: Text(
                                   item['icon'],
-                                  style: const TextStyle(fontSize: 40),
+                                  style: const TextStyle(fontSize: 45),
                                 ),
                               ),
                             ),
                           ),
                         ),
-                        // Konten teks
+                        // Konten teks (tanpa Expanded atau Spacer)
                         Padding(
                           padding: const EdgeInsets.all(10),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
-                            mainAxisSize: MainAxisSize.min,
                             children: [
                               Text(
                                 item['name'],
                                 style: const TextStyle(
                                   color: AppTheme.starlight,
-                                  fontSize: 13,
+                                  fontSize: 14, // Diperbesar dari 13
                                   fontWeight: FontWeight.bold,
                                 ),
                                 maxLines: 2,
@@ -175,17 +170,17 @@ class _EquipmentScreenState extends State<EquipmentScreen> {
                                 item['description'],
                                 style: const TextStyle(
                                   color: Color(0xFF9CA3AF),
-                                  fontSize: 10,
+                                  fontSize: 11, // Diperbesar dari 10
                                 ),
                                 maxLines: 2,
                                 overflow: TextOverflow.ellipsis,
                               ),
-                              const SizedBox(height: 6),
+                              const SizedBox(height: 8),
                               Text(
                                 _formatPrice(item['price_usd']),
                                 style: const TextStyle(
                                   color: AppTheme.solarGold,
-                                  fontSize: 12,
+                                  fontSize: 14, // Diperbesar dari 12
                                   fontWeight: FontWeight.w700,
                                 ),
                               ),
