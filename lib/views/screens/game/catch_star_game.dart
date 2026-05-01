@@ -20,7 +20,7 @@ class _CatchStarGameState extends State<CatchStarGame> {
   static const double _blackHoleSize = 90.0;
   static const double _starSize = 32.0;
   static const double _speedFactor = 0.9;
-  static const int _winScore = 20;
+  static const int _winScore = 10;
 
   double _blackHoleX = 0.5;
   double _actualLeft = 0.0;
@@ -301,7 +301,6 @@ class _CatchStarGameState extends State<CatchStarGame> {
           TextButton(
             onPressed: () {
               Navigator.pop(context);
-              Navigator.pop(context);
             },
             child: const Text('Kembali', style: TextStyle(color: AppTheme.auroraBlue)),
           ),
@@ -416,7 +415,7 @@ class _CatchStarGameState extends State<CatchStarGame> {
 
     // Tampilan game aktif
     return Scaffold(
-      appBar: AstroAppBar(title: '🎮 Black Hole Game'),
+      appBar: AstroAppBar(title: ' Black Hole Game'),
       body: StarBackground(
         child: Stack(
           children: [
@@ -505,7 +504,7 @@ class _CatchStarGameState extends State<CatchStarGame> {
                     borderRadius: BorderRadius.circular(20),
                   ),
                   child: const Text(
-                    'Miringkan HP ke KANAN / KIRI | Target: 20 bintang',
+                    'Miringkan HP ke KANAN / KIRI | Target: 10 bintang',
                     style: TextStyle(color: Colors.white70, fontSize: 10),
                   ),
                 ),
