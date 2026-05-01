@@ -68,15 +68,21 @@ class AuthService {
   Future<bool> loginWithBiometric() async {
     try {
       final canCheck = await _localAuth.canCheckBiometrics;
-      if (!canCheck) return false;
-      return await _localAuth.authenticate(
-        localizedReason: 'Masuk dengan biometrik ke AstroEdu',
+      final isSupported = await _localAuth.isDeviceSupported();
+
+      if (!canCheck || !isSupported) return false;
+
+      final authenticated = await _localAuth.authenticate(
+        localizedReason: 'Scan fingerprint untuk masuk ke AstroEdu',
         options: const AuthenticationOptions(
-          biometricOnly: false,
+          biometricOnly: true,
           stickyAuth: true,
         ),
       );
-    } catch (_) {
+
+      return authenticated;
+    } catch (e) {
+      print("Biometric error: $e");
       return false;
     }
   }

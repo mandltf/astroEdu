@@ -24,7 +24,23 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   void initState() {
     super.initState();
-    _checkBiometricAndSession();
+    _init();
+  }
+
+  Future<void> _init() async {
+    await _checkBiometricAndSession();
+
+    // kalau sudah pernah login & ada biometrik
+    if (_biometricAvailable && _hasExistingSession) {
+      await Future.delayed(const Duration(milliseconds: 500));
+
+      final ok = await AuthService.instance.loginWithBiometric();
+
+      if (ok) {
+        _toHome();
+      }
+      // kalau gagal, biarin user login manual
+    }
   }
 
   Future<void> _checkBiometricAndSession() async {
