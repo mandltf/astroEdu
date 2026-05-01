@@ -43,7 +43,7 @@ class _CatchStarGameState extends State<CatchStarGame> {
   double _filteredTilt = 0;
 
   final String _fact =
-      "🕳️ Lubang hitam memiliki gravitasi sangat kuat sehingga "
+      "Lubang hitam memiliki gravitasi sangat kuat sehingga "
       "bintang pun bisa 'dimakan'! Ketika bintang terlalu dekat, "
       "Sekarang, kamu jadi lubang hitam. Miringkan HP untuk memakan bintang jatuh!";
 
