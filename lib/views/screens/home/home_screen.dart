@@ -18,7 +18,7 @@ import '../planet/planet_list_screen.dart';
 import '../rasi/rasi_list_screen.dart';
 import '../gerhana/gerhana_list_screen.dart';
 import '../galaksi/galaksi_list_screen.dart';
-import '../buy_star/buy_star_screen.dart';
+// import '../buy_star/buy_star_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -573,14 +573,16 @@ class _HomeScreenState extends State<HomeScreen> {
       onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const EquipmentScreen())),
       child: const Row(
         children: [
-          Icon(Icons.science, color: Colors.white, size: 36),  // ganti ikon
+          // Ganti ikon science dengan teropong atau yang lebih menarik
+          Icon(Icons.rocket, color: Colors.white, size: 36), // Ikon teropong/binokular
+          // Alternatif: Icons.travel_explore, Icons.visibility, Icons.science
           SizedBox(width: 14),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text('Peralatan Astronomi', style: TextStyle(color: AppTheme.starlight, fontSize: 18, fontWeight: FontWeight.w700)),
-                Text('Temukan alat yang tepat untuk mengamati bintang\nHarga dalam USD/IDR',
+                Text('Temukan alat untuk mengamati bintang\nHarga dalam USD/IDR',
                     style: TextStyle(color: Color(0xFFC4B5FD), fontSize: 12)),
               ],
             ),
