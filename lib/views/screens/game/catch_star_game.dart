@@ -49,16 +49,16 @@ class _CatchStarGameState extends State<CatchStarGame> {
   @override
   void initState() {
     super.initState();
-    // Jangan langsung panggil dialog, tunggu sampai halaman benar-benar aktif
+    // Jangan panggil dialog di initState
   }
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    // Cek apakah halaman ini sedang ditampilkan
+    // Cek apakah halaman ini sedang aktif (visible)
     if (mounted && !_dialogShown && !_isGameStarted && ModalRoute.of(context)?.isCurrent == true) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted && !_dialogShown) {
+        if (mounted && !_dialogShown && ModalRoute.of(context)?.isCurrent == true) {
           _showStartDialog();
         }
       });

@@ -2,7 +2,7 @@
 import 'package:flutter/material.dart';
 import '../../../utils/app_theme.dart';
 import 'home_screen.dart';
-import '../game/catch_star_game.dart';            // <-- ganti import
+import '../game/catch_star_game.dart';
 import '../ai/astrobot_screen.dart';
 import '../profile/profile_screen.dart';
 
@@ -15,10 +15,11 @@ class MainScreen extends StatefulWidget {
 
 class _MainScreenState extends State<MainScreen> {
   int _currentIndex = 0;
-
-  final List<Widget> _screens = [
+  
+  // Lazy loading: widget dibuat saat pertama kali dibuka
+  final List<Widget?> _screens = [
     const HomeScreen(),
-    const CatchStarGame(),                      
+    null, // Game akan dibuat saat tab Game dipilih
     const AstroBotScreen(),
     const ProfileScreen(),
   ];
@@ -28,7 +29,16 @@ class _MainScreenState extends State<MainScreen> {
     return Scaffold(
       body: IndexedStack(
         index: _currentIndex,
-        children: _screens,
+        children: _screens.asMap().entries.map((entry) {
+          final index = entry.key;
+          final widget = entry.value;
+          
+          // Jika widget null dan ini tab Game (index 1), buat widget baru
+          if (widget == null && index == 1) {
+            return const SizedBox(); // Placeholder sementara
+          }
+          return widget ?? const SizedBox();
+        }).toList(),
       ),
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
@@ -45,7 +55,17 @@ class _MainScreenState extends State<MainScreen> {
         child: NavigationBar(
           backgroundColor: Colors.transparent,
           selectedIndex: _currentIndex,
-          onDestinationSelected: (i) => setState(() => _currentIndex = i),
+          onDestinationSelected: (i) {
+            // Jika memilih tab Game dan widget masih null, buat baru
+            if (i == 1 && _screens[1] == null) {
+              setState(() {
+                _screens[1] = const CatchStarGame();
+              });
+            }
+            setState(() {
+              _currentIndex = i;
+            });
+          },
           indicatorColor: AppTheme.auroraBlue.withOpacity(0.2),
           destinations: const [
             NavigationDestination(
