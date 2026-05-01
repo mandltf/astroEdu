@@ -2,7 +2,7 @@
 import 'package:flutter/material.dart';
 import '../../../utils/app_theme.dart';
 import 'home_screen.dart';
-import '../skymap/skymap_screen.dart';
+import '../game/catch_star_game.dart';            // <-- ganti import
 import '../ai/astrobot_screen.dart';
 import '../profile/profile_screen.dart';
 
@@ -18,7 +18,7 @@ class _MainScreenState extends State<MainScreen> {
 
   final List<Widget> _screens = [
     const HomeScreen(),
-    const SkyMapScreen(),
+    const CatchStarGame(),                      
     const AstroBotScreen(),
     const ProfileScreen(),
   ];
@@ -54,9 +54,9 @@ class _MainScreenState extends State<MainScreen> {
               label: 'Home',
             ),
             NavigationDestination(
-              icon: Icon(Icons.explore_outlined, color: Color(0xFF6B7280)),
-              selectedIcon: Icon(Icons.explore, color: AppTheme.auroraBlue),
-              label: 'Peta Langit',
+              icon: Icon(Icons.sports_esports_outlined, color: Color(0xFF6B7280)),
+              selectedIcon: Icon(Icons.sports_esports, color: AppTheme.auroraBlue),
+              label: 'Game',
             ),
             NavigationDestination(
               icon: Icon(Icons.smart_toy_outlined, color: Color(0xFF6B7280)),
