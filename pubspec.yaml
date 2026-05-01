@@ -27,7 +27,7 @@ dependencies:
   geocoding: ^3.0.0
   
   # Sensor
-  sensors_plus: ^4.0.2
+  sensors_plus: ^7.0.0
   
   # Image picker
   image_picker: ^1.0.7
