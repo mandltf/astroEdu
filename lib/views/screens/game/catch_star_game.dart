@@ -15,35 +15,27 @@ class CatchStarGame extends StatefulWidget {
 }
 
 class _CatchStarGameState extends State<CatchStarGame> {
-  // Ukuran layar
   late double _screenWidth;
   late double _screenHeight;
-  static const double _blackHoleSize = 64.0;  // ukuran lubang hitam
+  static const double _blackHoleSize = 70.0;
   static const double _starSize = 32.0;
 
-  // Posisi lubang hitam (kiri/kanan)
-  double _blackHoleX = 0.5;          // 0 = paling kiri, 1 = paling kanan
+  double _blackHoleX = 0.5;
   double _actualLeft = 0.0;
 
-  // Daftar bintang jatuh
   List<Star> _stars = [];
 
-  // Skor dan nyawa
   int _score = 0;
-  int _lives = 3;
+  int _lives = 5;
   bool _isGameOver = false;
-  bool _isGameStarted = false;   // untuk menampilkan dialog info sebelum mulai
+  bool _isGameStarted = false;
 
-  // Timer
   Timer? _spawnTimer;
   Timer? _moveTimer;
-
-  // Sensor
   StreamSubscription<AccelerometerEvent>? _accelerometerSub;
 
   final Random _random = Random();
 
-  // Fakta black hole untuk dialog
   final String _blackHoleFact =
       "🕳️ Lubang hitam memiliki gravitasi sangat kuat sehingga "
       "bintang pun bisa 'dimakan'! Ketika bintang terlalu dekat, "
@@ -53,7 +45,12 @@ class _CatchStarGameState extends State<CatchStarGame> {
   @override
   void initState() {
     super.initState();
-    _showStartDialog();
+    // Tunggu build selesai agar ukuran layar tersedia
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        _showStartDialog();
+      }
+    });
   }
 
   Future<void> _showStartDialog() async {
@@ -102,6 +99,10 @@ class _CatchStarGameState extends State<CatchStarGame> {
   }
 
   void _startGame() {
+    // Pastikan ukuran layar sudah tersedia (dari build sebelumnya)
+    _screenWidth = MediaQuery.of(context).size.width;
+    _screenHeight = MediaQuery.of(context).size.height;
+    
     setState(() {
       _isGameStarted = true;
       _isGameOver = false;
@@ -111,6 +112,7 @@ class _CatchStarGameState extends State<CatchStarGame> {
       _blackHoleX = 0.5;
       _actualLeft = _blackHoleX * (_screenWidth - _blackHoleSize);
     });
+    
     _startSensors();
     _startGameLoop();
   }
@@ -118,18 +120,16 @@ class _CatchStarGameState extends State<CatchStarGame> {
   void _startSensors() {
     _accelerometerSub?.cancel();
     _accelerometerSub = accelerometerEvents.listen((event) {
-      // event.x untuk miring kiri/kanan (nilai -9.8 s/d 9.8)
-      // Normalisasi ke -1..1 (miring kiri = negatif, kanan = positif)
+      if (_isGameOver || !mounted) return;
       double tilt = event.x / 9.8;
       tilt = tilt.clamp(-1.0, 1.0);
-      // Kecepatan gerak lubang hitam: 0.2 per siklus (halus)
       double newX = (_blackHoleX + tilt * 0.12).clamp(0.0, 1.0);
-      if (mounted) {
-        setState(() {
-          _blackHoleX = newX;
-          _actualLeft = _blackHoleX * (_screenWidth - _blackHoleSize);
-        });
-      }
+      setState(() {
+        _blackHoleX = newX;
+        _actualLeft = _blackHoleX * (_screenWidth - _blackHoleSize);
+      });
+    }, onError: (error) {
+      print('Sensor error: $error');
     });
   }
 
@@ -137,7 +137,6 @@ class _CatchStarGameState extends State<CatchStarGame> {
     _spawnTimer?.cancel();
     _moveTimer?.cancel();
 
-    // Spawn bintang setiap 0.9 detik (lebih lambat dari sebelumnya agar tidak terlalu padat)
     _spawnTimer = Timer.periodic(const Duration(milliseconds: 900), (timer) {
       if (!_isGameOver && mounted) {
         setState(() {
@@ -150,7 +149,6 @@ class _CatchStarGameState extends State<CatchStarGame> {
       }
     });
 
-    // Update posisi bintang setiap 30ms (~33 fps)
     _moveTimer = Timer.periodic(const Duration(milliseconds: 30), (timer) {
       if (!_isGameOver && mounted) {
         setState(() {
@@ -168,18 +166,17 @@ class _CatchStarGameState extends State<CatchStarGame> {
       double starLeft = star.x * (_screenWidth - _starSize);
       double starTop = star.y * (_screenHeight - _starSize);
       double blackLeft = _actualLeft;
-      double blackTop = _screenHeight - _blackHoleSize - 20; // di atas bottom 20px
+      double blackTop = _screenHeight - _blackHoleSize - 20;
 
-      // Cek tabrakan (bounding box)
+      // Tabrakan dengan black hole
       if (starTop + _starSize >= blackTop &&
           starTop <= blackTop + _blackHoleSize &&
           starLeft + _starSize >= blackLeft &&
           starLeft <= blackLeft + _blackHoleSize) {
-        // Bintang tertangkap
         _score++;
-        continue; // bintang ini hilang
+        continue;
       }
-      // Bintang jatuh ke tanah (melewati batas bawah)
+      // Bintang jatuh ke tanah
       else if (star.y >= 1.0) {
         _lives--;
         if (_lives <= 0) {
@@ -213,7 +210,7 @@ class _CatchStarGameState extends State<CatchStarGame> {
           TextButton(
             onPressed: () {
               Navigator.pop(context);
-              Navigator.pop(context); // kembali ke home
+              Navigator.pop(context);
             },
             child: const Text('Kembali', style: TextStyle(color: AppTheme.auroraBlue)),
           ),
@@ -231,11 +228,15 @@ class _CatchStarGameState extends State<CatchStarGame> {
 
   void _resetAndStart() {
     _stopGame();
+    _screenWidth = MediaQuery.of(context).size.width;
+    _screenHeight = MediaQuery.of(context).size.height;
+    
     setState(() {
       _stars.clear();
       _score = 0;
-      _lives = 3;
+      _lives = 5;
       _isGameOver = false;
+      _isGameStarted = true;
       _blackHoleX = 0.5;
       _actualLeft = _blackHoleX * (_screenWidth - _blackHoleSize);
     });
@@ -251,23 +252,32 @@ class _CatchStarGameState extends State<CatchStarGame> {
 
   @override
   Widget build(BuildContext context) {
+    // Update ukuran layar setiap build
     _screenWidth = MediaQuery.of(context).size.width;
     _screenHeight = MediaQuery.of(context).size.height;
+    
     if (_actualLeft == 0 && _blackHoleX != 0) {
       _actualLeft = _blackHoleX * (_screenWidth - _blackHoleSize);
     }
 
+    // Jika game belum dimulai, tampilkan loading (tapi biasanya dialog sudah muncul)
     if (!_isGameStarted) {
-      // Sementara tampilkan loading (sebenarnya dialog sudah tampil, tapi biar aman)
-      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+      return Scaffold(
+        appBar: AstroAppBar(title: '🎮 Black Hole Game'),
+        body: StarBackground(
+          child: const Center(
+            child: CircularProgressIndicator(),
+          ),
+        ),
+      );
     }
 
     return Scaffold(
-      appBar: AstroAppBar(title: 'Game: Catch the Star'),
+      appBar: AstroAppBar(title: '🎮 Black Hole Game'),
       body: StarBackground(
         child: Stack(
           children: [
-            // Info skor dan nyawa
+            // Skor
             Positioned(
               top: 20,
               left: 16,
@@ -280,6 +290,7 @@ class _CatchStarGameState extends State<CatchStarGame> {
                 child: Text('⭐ Skor: $_score', style: const TextStyle(color: AppTheme.solarGold, fontSize: 16)),
               ),
             ),
+            // Nyawa
             Positioned(
               top: 20,
               right: 16,
@@ -301,16 +312,16 @@ class _CatchStarGameState extends State<CatchStarGame> {
                 top: star.y * (_screenHeight - _starSize),
                 child: const Icon(Icons.star, color: AppTheme.solarGold, size: _starSize),
               ),
-            // Black hole sebagai penangkap (gunakan gambar jika ada, fallback emoji)
+            // Black hole (gunakan asset gambar)
             Positioned(
               left: _actualLeft,
               bottom: 20,
               child: Image.asset(
-                'assets/images/blackhole.png', // ganti dengan path gambar black hole kamu
+                'assets/images/blackhole.png', // Ganti dengan path gambar black hole kamu
                 width: _blackHoleSize,
                 height: _blackHoleSize,
                 errorBuilder: (context, error, stackTrace) {
-                  // fallback jika gambar tidak ada
+                  // Fallback jika gambar tidak ditemukan
                   return Container(
                     width: _blackHoleSize,
                     height: _blackHoleSize,
