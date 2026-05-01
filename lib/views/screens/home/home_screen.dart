@@ -9,6 +9,7 @@ import '../../../services/local/auth_service.dart';
 import '../../../services/local/location_service.dart';
 import '../../../services/local/notification_service.dart';
 import '../../../services/local/fenomena_service.dart';
+import '../equipment/equipment_screen.dart';
 import '../../../utils/app_theme.dart';
 import '../../../utils/constants.dart';
 import '../../widgets/star_background.dart';
@@ -220,7 +221,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   const SizedBox(height: 20),
                   _buildFactCard(),
                   const SizedBox(height: 20),
-                  _buildBuyStarCard(),
+                  _buildEquipmentCard(),
                   const SizedBox(height: 80),
                 ],
               ),
@@ -566,20 +567,20 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildBuyStarCard() {
+  Widget _buildEquipmentCard() {
     return GradientCard(
       colors: const [Color(0xFF1C1C4E), Color(0xFF5B21B6)],
-      onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const BuyStarScreen())),
+      onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const EquipmentScreen())),
       child: const Row(
         children: [
-          Text('⭐', style: TextStyle(fontSize: 36)),
+          Icon(Icons.science, color: Colors.white, size: 36),  // ganti ikon
           SizedBox(width: 14),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('Beli Bintang', style: TextStyle(color: AppTheme.starlight, fontSize: 18, fontWeight: FontWeight.w700)),
-                Text('Beri nama bintang favoritmu!\nDengan konversi mata uang real-time',
+                Text('Peralatan Astronomi', style: TextStyle(color: AppTheme.starlight, fontSize: 18, fontWeight: FontWeight.w700)),
+                Text('Temukan alat yang tepat untuk mengamati bintang\nHarga dalam USD/IDR',
                     style: TextStyle(color: Color(0xFFC4B5FD), fontSize: 12)),
               ],
             ),
