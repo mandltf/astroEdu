@@ -1,9 +1,9 @@
-// lib/services/local/auth_service.dart
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:local_auth/local_auth.dart';
+import 'package:local_auth/error_codes.dart' as auth_error;
 import 'package:encrypt/encrypt.dart' as enc;
 import 'database_helper.dart';
-import '../../utils/constants.dart'; // <-- tambahkan import AppConstants
+import '../../utils/constants.dart';
 
 class AuthService {
   static final AuthService instance = AuthService._();
@@ -11,7 +11,6 @@ class AuthService {
 
   final LocalAuthentication _localAuth = LocalAuthentication();
 
-  // Encrypt password with AES
   String encryptPassword(String password) {
     final key = enc.Key.fromUtf8(AppConstants.encryptionKey);
     final iv = enc.IV.fromUtf8(AppConstants.encryptionIV);
@@ -42,7 +41,6 @@ class AuthService {
       'created_at': DateTime.now().toIso8601String(),
     });
 
-    // Unlock first item in each category
     for (final cat in ['planet', 'rasi', 'gerhana', 'galaksi']) {
       await DatabaseHelper.instance.unlockItem(userId, cat, 'item_0');
     }
@@ -65,24 +63,55 @@ class AuthService {
     return {'success': true, 'userId': user['id']};
   }
 
+  /// Cek apakah biometrik tersedia dan sudah didaftarkan
+  Future<bool> isBiometricAvailable() async {
+    try {
+      // Cek apakah perangkat mendukung biometrik
+      final isSupported = await _localAuth.isDeviceSupported();
+      if (!isSupported) return false;
+      
+      // Cek apakah ada biometrik yang terdaftar
+      final canCheck = await _localAuth.canCheckBiometrics;
+      if (!canCheck) return false;
+      
+      // Cek jenis biometrik yang tersedia
+      final availableBiometrics = await _localAuth.getAvailableBiometrics();
+      return availableBiometrics.isNotEmpty;
+    } catch (e) {
+      print('Biometric check error: $e');
+      return false;
+    }
+  }
+
+  /// Login dengan biometrik (Face ID / Fingerprint)
   Future<bool> loginWithBiometric() async {
     try {
-      final canCheck = await _localAuth.canCheckBiometrics;
-      final isSupported = await _localAuth.isDeviceSupported();
+      // Cek ketersediaan biometrik
+      final isAvailable = await isBiometricAvailable();
+      if (!isAvailable) {
+        print('Biometric not available');
+        return false;
+      }
 
-      if (!canCheck || !isSupported) return false;
+      // Cek apakah ada session sebelumnya (user sudah pernah login)
+      final userId = await getCurrentUserId();
+      if (userId == null) {
+        print('No existing session');
+        return false;
+      }
 
+      // Lakukan autentikasi biometrik
       final authenticated = await _localAuth.authenticate(
-        localizedReason: 'Scan fingerprint untuk masuk ke AstroEdu',
+        localizedReason: 'Verifikasi identitas untuk masuk ke AstroEdu',
         options: const AuthenticationOptions(
-          biometricOnly: true,
           stickyAuth: true,
+          biometricOnly: true, // Hanya biometrik (Face ID/Fingerprint), tidak pakai PIN/Pattern
         ),
       );
-
+      
       return authenticated;
     } catch (e) {
-      print("Biometric error: $e");
+      print('Biometric auth error: $e');
       return false;
     }
   }
@@ -103,13 +132,5 @@ class AuthService {
   Future<void> logout() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.clear();
-  }
-
-  Future<bool> isBiometricAvailable() async {
-    try {
-      return await _localAuth.canCheckBiometrics;
-    } catch (_) {
-      return false;
-    }
   }
 }
