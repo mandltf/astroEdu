@@ -1,4 +1,3 @@
-// lib/views/screens/gerhana/gerhana_list_screen.dart
 import 'package:flutter/material.dart';
 import '../../../services/local/database_helper.dart';
 import '../../../services/local/auth_service.dart';
@@ -39,11 +38,11 @@ class _GerhanaListScreenState extends State<GerhanaListScreen> {
         name: data['name'],
         emoji: data['emoji'],
         color: data['color'],
-        shortDesc: 'Fenomena ${data['name']}',
+        shortDesc: data['shortDesc'] ?? 'Fenomena ${data['name']}',
         description: 'Memuat dari Wikipedia...',
-        duration: 'Belum diketahui',
-        frequency: 'Belum diketahui',
-        safety: 'Tetap waspada',
+        duration: data['duration'] ?? 'Belum diketahui',
+        frequency: data['frequency'] ?? 'Belum diketahui',
+        safety: data['safety'] ?? 'Tetap waspada',
         facts: [],
         wikiData: null,
       );
@@ -85,9 +84,7 @@ class _GerhanaListScreenState extends State<GerhanaListScreen> {
     final item = _items[index];
     if (item.wikiData == null) {
       final wiki = await DataController.instance.getWikiData(item.name);
-      if (wiki != null) {
-        item.wikiData = wiki;
-      }
+      if (wiki != null) item.wikiData = wiki;
     }
 
     await Navigator.push(
@@ -129,86 +126,28 @@ class _GerhanaListScreenState extends State<GerhanaListScreen> {
   Widget _buildQuizCard() {
     final unlocked = _allRead;
     return GestureDetector(
-      onTap: () {
-        if (unlocked) {
-          _openQuiz();
-        } else {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('🔒 Selesaikan semua materi gerhana untuk membuka kuis!'),
-              backgroundColor: AppTheme.marsRed,
-            ),
-          );
-        }
-      },
+      onTap: () => unlocked ? _openQuiz() : ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('🔒 Selesaikan semua materi gerhana untuk membuka kuis!'), backgroundColor: AppTheme.marsRed)),
       child: Container(
-        margin: const EdgeInsets.only(bottom: 10, left: 16, right: 16),
+        margin: const EdgeInsets.only(bottom: 10),
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
           color: unlocked ? AppTheme.cardBg : AppTheme.deepSpace,
           borderRadius: BorderRadius.circular(14),
-          border: Border.all(
-            color: unlocked ? AppTheme.solarGold : AppTheme.cardBorder.withOpacity(0.3),
-            width: unlocked ? 1.5 : 1,
-          ),
-          gradient: unlocked
-              ? LinearGradient(
-                  colors: [AppTheme.solarGold.withOpacity(0.1), Colors.transparent],
-                )
-              : null,
+          border: Border.all(color: unlocked ? AppTheme.solarGold : AppTheme.cardBorder.withOpacity(0.3), width: unlocked ? 1.5 : 1),
+          gradient: unlocked ? LinearGradient(colors: [AppTheme.solarGold.withOpacity(0.1), Colors.transparent]) : null,
         ),
         child: Row(
           children: [
-            Container(
-              width: 52, height: 52,
-              decoration: BoxDecoration(
-                color: unlocked ? AppTheme.solarGold.withOpacity(0.2) : Colors.grey.withOpacity(0.2),
-                shape: BoxShape.circle,
-              ),
-              child: Center(
-                child: unlocked
-                    ? const Icon(Icons.quiz, color: AppTheme.solarGold, size: 28)
-                    : const Icon(Icons.lock, color: Color(0xFF6B7280), size: 24),
-              ),
-            ),
+            Container(width: 52, height: 52, decoration: BoxDecoration(color: unlocked ? AppTheme.solarGold.withOpacity(0.2) : Colors.grey.withOpacity(0.2), shape: BoxShape.circle),
+              child: Center(child: unlocked ? const Icon(Icons.quiz, color: AppTheme.solarGold, size: 28) : const Icon(Icons.lock, color: Color(0xFF6B7280), size: 24))),
             const SizedBox(width: 14),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Text(
-                        '🎯 Kuis Gerhana',
-                        style: TextStyle(
-                          color: unlocked ? AppTheme.starlight : const Color(0xFF6B7280),
-                          fontSize: 16,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                      if (unlocked) ...[
-                        const SizedBox(width: 6),
-                        const Icon(Icons.auto_awesome, color: AppTheme.solarGold, size: 16),
-                      ],
-                    ],
-                  ),
-                  Text(
-                    unlocked
-                        ? 'Uji pengetahuanmu tentang fenomena gerhana'
-                        : 'Selesaikan semua materi gerhana untuk membuka kuis',
-                    style: TextStyle(
-                      color: unlocked ? const Color(0xFF9CA3AF) : const Color(0xFF4B5563),
-                      fontSize: 12,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            Icon(
-              unlocked ? Icons.arrow_forward_ios : Icons.lock,
-              color: unlocked ? AppTheme.solarGold : const Color(0xFF4B5563),
-              size: 16,
-            ),
+            Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              Row(children: [Text(' Kuis Gerhana', style: TextStyle(color: unlocked ? AppTheme.starlight : const Color(0xFF6B7280), fontSize: 16, fontWeight: FontWeight.w700)),
+                if (unlocked) const Icon(Icons.auto_awesome, color: AppTheme.solarGold, size: 16)]),
+              Text(unlocked ? 'Uji pengetahuanmu tentang fenomena gerhana' : 'Selesaikan semua materi gerhana untuk membuka kuis',
+                  style: TextStyle(color: unlocked ? const Color(0xFF9CA3AF) : const Color(0xFF4B5563), fontSize: 12)),
+            ])),
+            Icon(unlocked ? Icons.arrow_forward_ios : Icons.lock, color: unlocked ? AppTheme.solarGold : const Color(0xFF4B5563), size: 16),
           ],
         ),
       ),
@@ -217,155 +156,98 @@ class _GerhanaListScreenState extends State<GerhanaListScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final filtered = _search.isEmpty
-        ? _items
-        : _items.where((g) => g.name.toLowerCase().contains(_search.toLowerCase())).toList();
+    final filtered = _search.isEmpty ? _items : _items.where((g) => g.name.toLowerCase().contains(_search.toLowerCase())).toList();
+    final itemCount = filtered.isEmpty ? 0 : filtered.length + 1;
 
     return Scaffold(
       appBar: AstroAppBar(title: '🌑 Gerhana'),
       body: StarBackground(
-        child: _loading
-            ? const Center(child: CircularProgressIndicator())
-            : Column(
+        child: _loading ? const Center(child: CircularProgressIndicator()) : Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+              child: TextField(
+                onChanged: (v) => setState(() => _search = v),
+                style: const TextStyle(color: AppTheme.starlight),
+                decoration: InputDecoration(
+                  hintText: 'Cari gerhana...',
+                  prefixIcon: const Icon(Icons.search, color: AppTheme.auroraBlue),
+                  suffixIcon: _search.isNotEmpty ? IconButton(icon: const Icon(Icons.clear, color: AppTheme.auroraBlue), onPressed: () => setState(() => _search = '')) : null,
+                ),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
-                    child: TextField(
-                      onChanged: (v) => setState(() => _search = v),
-                      style: const TextStyle(color: AppTheme.starlight),
-                      decoration: InputDecoration(
-                        hintText: 'Cari gerhana...',
-                        prefixIcon: const Icon(Icons.search, color: AppTheme.auroraBlue),
-                        suffixIcon: _search.isNotEmpty
-                            ? IconButton(
-                                icon: const Icon(Icons.clear, color: AppTheme.auroraBlue),
-                                onPressed: () => setState(() => _search = ''),
-                              )
-                            : null,
-                      ),
-                    ),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text('Progress: ${_readMap.values.where((v) => v).length}/${_items.length}', style: const TextStyle(color: Color(0xFF9CA3AF), fontSize: 12)),
+                      if (_allRead) Container(padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3), decoration: BoxDecoration(color: AppTheme.solarGold.withOpacity(0.2), borderRadius: BorderRadius.circular(20)),
+                        child: const Text('Kuis Tersedia! 🎯', style: TextStyle(color: AppTheme.solarGold, fontSize: 11, fontWeight: FontWeight.w600))),
+                    ],
                   ),
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Text(
-                              'Progress: ${_readMap.values.where((v) => v).length}/${_items.length}',
-                              style: const TextStyle(color: Color(0xFF9CA3AF), fontSize: 12),
-                            ),
-                            if (_allRead)
-                              Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
-                                decoration: BoxDecoration(
-                                  color: AppTheme.solarGold.withOpacity(0.2),
-                                  borderRadius: BorderRadius.circular(20),
-                                ),
-                                child: const Text('Kuis Tersedia! 🎯',
-                                    style: TextStyle(color: AppTheme.solarGold, fontSize: 11, fontWeight: FontWeight.w600)),
-                              ),
-                          ],
-                        ),
-                        const SizedBox(height: 6),
-                        LinearProgressIndicator(
-                          value: _items.isEmpty ? 0 : _readMap.values.where((v) => v).length / _items.length,
-                          backgroundColor: AppTheme.cardBorder,
-                          valueColor: const AlwaysStoppedAnimation<Color>(AppTheme.auroraBlue),
-                          borderRadius: BorderRadius.circular(4),
-                        ),
-                      ],
-                    ),
+                  const SizedBox(height: 6),
+                  LinearProgressIndicator(
+                    value: _items.isEmpty ? 0 : _readMap.values.where((v) => v).length / _items.length,
+                    backgroundColor: AppTheme.cardBorder,
+                    valueColor: const AlwaysStoppedAnimation<Color>(AppTheme.auroraBlue),
+                    borderRadius: BorderRadius.circular(4),
                   ),
-                  const SizedBox(height: 12),
-                  Expanded(
-                    child: ListView.builder(
-                      padding: const EdgeInsets.fromLTRB(0, 0, 0, 0),
-                      itemCount: filtered.length,
-                      itemBuilder: (_, i) {
-                        final item = filtered[i];
-                        final index = _items.indexOf(item);
-                        final id = 'item_$index';
-                        final isRead = _readMap[id] ?? false;
-                        final isUnlocked = _unlockMap[id] ?? (index == 0);
-                        final previewText = item.wikiData?['extract'] ?? item.description;
-                        final displayText = previewText.length > 60 ? '${previewText.substring(0, 60)}...' : previewText;
-
-                        return GestureDetector(
-                          onTap: () => _openItem(index),
-                          child: Container(
-                            margin: const EdgeInsets.only(bottom: 10, left: 16, right: 16),
-                            padding: const EdgeInsets.all(14),
-                            decoration: BoxDecoration(
-                              color: isUnlocked ? AppTheme.cardBg : AppTheme.deepSpace,
-                              borderRadius: BorderRadius.circular(14),
-                              border: Border.all(
-                                color: isRead
-                                    ? AppTheme.nebulaGreen.withOpacity(0.5)
-                                    : isUnlocked ? AppTheme.cardBorder : AppTheme.cardBorder.withOpacity(0.3),
-                              ),
-                            ),
-                            child: Row(
-                              children: [
-                                Container(
-                                  width: 52, height: 52,
-                                  decoration: BoxDecoration(
-                                    color: Color(item.color).withOpacity(0.15),
-                                    shape: BoxShape.circle,
-                                  ),
-                                  child: isUnlocked
-                                      ? Center(child: Text(item.emoji, style: const TextStyle(fontSize: 26)))
-                                      : const Icon(Icons.lock, color: Color(0xFF6B7280), size: 24),
-                                ),
-                                const SizedBox(width: 14),
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      Row(
-                                        children: [
-                                          Text(
-                                            item.name,
-                                            style: TextStyle(
-                                              color: isUnlocked ? AppTheme.starlight : const Color(0xFF6B7280),
-                                              fontSize: 16,
-                                              fontWeight: FontWeight.w700,
-                                            ),
-                                          ),
-                                          if (isRead) ...[
-                                            const SizedBox(width: 6),
-                                            const Icon(Icons.check_circle, color: AppTheme.nebulaGreen, size: 16),
-                                          ],
-                                        ],
-                                      ),
-                                      Text(
-                                        displayText,
-                                        style: TextStyle(
-                                          color: isUnlocked ? const Color(0xFF9CA3AF) : const Color(0xFF4B5563),
-                                          fontSize: 12,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                                Icon(
-                                  isUnlocked ? Icons.arrow_forward_ios : Icons.lock,
-                                  color: isUnlocked ? AppTheme.auroraBlue : const Color(0xFF4B5563),
-                                  size: 16,
-                                ),
-                              ],
-                            ),
-                          ),
-                        );
-                      },
-                    ),
-                  ),
-                  _buildQuizCard(),
-                  const SizedBox(height: 80),
                 ],
               ),
+            ),
+            const SizedBox(height: 12),
+            Expanded(
+              child: ListView.builder(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 0),
+                itemCount: itemCount,
+                itemBuilder: (context, idx) {
+                  if (idx < filtered.length) {
+                    final item = filtered[idx];
+                    final originalIndex = _items.indexOf(item);
+                    final id = 'item_$originalIndex';
+                    final isRead = _readMap[id] ?? false;
+                    final isUnlocked = _unlockMap[id] ?? (originalIndex == 0);
+                    final preview = item.wikiData?['extract'] ?? item.description;
+                    final display = preview.length > 60 ? '${preview.substring(0, 60)}...' : preview;
+
+                    return GestureDetector(
+                      onTap: () => _openItem(originalIndex),
+                      child: Container(
+                        margin: const EdgeInsets.only(bottom: 10),
+                        padding: const EdgeInsets.all(14),
+                        decoration: BoxDecoration(
+                          color: isUnlocked ? AppTheme.cardBg : AppTheme.deepSpace,
+                          borderRadius: BorderRadius.circular(14),
+                          border: Border.all(color: isRead ? AppTheme.nebulaGreen.withOpacity(0.5) : isUnlocked ? AppTheme.cardBorder : AppTheme.cardBorder.withOpacity(0.3)),
+                        ),
+                        child: Row(
+                          children: [
+                            Container(width: 52, height: 52, decoration: BoxDecoration(color: Color(item.color).withOpacity(0.15), shape: BoxShape.circle),
+                              child: isUnlocked ? Center(child: Text(item.emoji, style: const TextStyle(fontSize: 26))) : const Icon(Icons.lock, color: Color(0xFF6B7280), size: 24)),
+                            const SizedBox(width: 14),
+                            Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                              Row(children: [Text(item.name, style: TextStyle(color: isUnlocked ? AppTheme.starlight : const Color(0xFF6B7280), fontSize: 16, fontWeight: FontWeight.w700)),
+                                if (isRead) ...[const SizedBox(width: 6), const Icon(Icons.check_circle, color: AppTheme.nebulaGreen, size: 16)]],
+                              ),
+                              Text(display, style: TextStyle(color: isUnlocked ? const Color(0xFF9CA3AF) : const Color(0xFF4B5563), fontSize: 12)),
+                            ])),
+                            Icon(isUnlocked ? Icons.arrow_forward_ios : Icons.lock, color: isUnlocked ? AppTheme.auroraBlue : const Color(0xFF4B5563), size: 16),
+                          ],
+                        ),
+                      ),
+                    );
+                  } else {
+                    return _buildQuizCard();
+                  }
+                },
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

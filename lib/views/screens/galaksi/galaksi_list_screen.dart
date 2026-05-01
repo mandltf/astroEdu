@@ -1,4 +1,3 @@
-// lib/views/screens/galaksi/galaksi_list_screen.dart
 import 'package:flutter/material.dart';
 import '../../../services/local/database_helper.dart';
 import '../../../services/local/auth_service.dart';
@@ -85,9 +84,7 @@ class _GalaksiListScreenState extends State<GalaksiListScreen> {
     final item = _items[index];
     if (item.wikiData == null) {
       final wiki = await DataController.instance.getWikiData(item.name);
-      if (wiki != null) {
-        item.wikiData = wiki;
-      }
+      if (wiki != null) item.wikiData = wiki;
     }
 
     await Navigator.push(
@@ -128,34 +125,23 @@ class _GalaksiListScreenState extends State<GalaksiListScreen> {
 
   Widget _buildQuizCard() {
     final unlocked = _allRead;
-    return GestureDetector(
-      onTap: () {
-        if (unlocked) {
-          _openQuiz();
-        } else {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('🔒 Selesaikan semua materi galaksi untuk membuka kuis!'),
-              backgroundColor: AppTheme.marsRed,
-            ),
-          );
-        }
-      },
-      child: Container(
-        margin: const EdgeInsets.only(bottom: 10, left: 16, right: 16),
-        padding: const EdgeInsets.all(14),
-        decoration: BoxDecoration(
-          color: unlocked ? AppTheme.cardBg : AppTheme.deepSpace,
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(
-            color: unlocked ? AppTheme.solarGold : AppTheme.cardBorder.withOpacity(0.3),
-            width: unlocked ? 1.5 : 1,
-          ),
-          gradient: unlocked
-              ? LinearGradient(
-                  colors: [AppTheme.solarGold.withOpacity(0.1), Colors.transparent],
-                )
-              : null,
+    return Container(
+      margin: const EdgeInsets.only(bottom: 10),
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: unlocked ? AppTheme.cardBg : AppTheme.deepSpace,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(
+          color: unlocked ? AppTheme.solarGold : AppTheme.cardBorder.withOpacity(0.3),
+          width: unlocked ? 1.5 : 1,
+        ),
+        gradient: unlocked
+            ? LinearGradient(colors: [AppTheme.solarGold.withOpacity(0.1), Colors.transparent])
+            : null,
+      ),
+      child: GestureDetector(
+        onTap: () => unlocked ? _openQuiz() : ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('🔒 Selesaikan semua materi galaksi untuk membuka kuis!'), backgroundColor: AppTheme.marsRed),
         ),
         child: Row(
           children: [
@@ -220,6 +206,7 @@ class _GalaksiListScreenState extends State<GalaksiListScreen> {
     final filtered = _search.isEmpty
         ? _items
         : _items.where((g) => g.name.toLowerCase().contains(_search.toLowerCase())).toList();
+    final itemCount = filtered.isEmpty ? 0 : filtered.length + 1;
 
     return Scaffold(
       appBar: AstroAppBar(title: '🌌 Galaksi'),
@@ -237,10 +224,7 @@ class _GalaksiListScreenState extends State<GalaksiListScreen> {
                         hintText: 'Cari galaksi...',
                         prefixIcon: const Icon(Icons.search, color: AppTheme.auroraBlue),
                         suffixIcon: _search.isNotEmpty
-                            ? IconButton(
-                                icon: const Icon(Icons.clear, color: AppTheme.auroraBlue),
-                                onPressed: () => setState(() => _search = ''),
-                              )
+                            ? IconButton(icon: const Icon(Icons.clear, color: AppTheme.auroraBlue), onPressed: () => setState(() => _search = ''))
                             : null,
                       ),
                     ),
@@ -282,88 +266,90 @@ class _GalaksiListScreenState extends State<GalaksiListScreen> {
                   const SizedBox(height: 12),
                   Expanded(
                     child: ListView.builder(
-                      padding: const EdgeInsets.fromLTRB(0, 0, 0, 0),
-                      itemCount: filtered.length,
-                      itemBuilder: (_, i) {
-                        final item = filtered[i];
-                        final index = _items.indexOf(item);
-                        final id = 'item_$index';
-                        final isRead = _readMap[id] ?? false;
-                        final isUnlocked = _unlockMap[id] ?? (index == 0);
-                        final previewText = item.wikiData?['extract'] ?? item.description;
-                        final displayText = previewText.length > 60 ? '${previewText.substring(0, 60)}...' : previewText;
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      itemCount: itemCount,
+                      itemBuilder: (context, idx) {
+                        if (idx < filtered.length) {
+                          final item = filtered[idx];
+                          final originalIndex = _items.indexOf(item);
+                          final id = 'item_$originalIndex';
+                          final isRead = _readMap[id] ?? false;
+                          final isUnlocked = _unlockMap[id] ?? (originalIndex == 0);
+                          final previewText = item.wikiData?['extract'] ?? item.description;
+                          final displayText = previewText.length > 60 ? '${previewText.substring(0, 60)}...' : previewText;
 
-                        return GestureDetector(
-                          onTap: () => _openItem(index),
-                          child: Container(
-                            margin: const EdgeInsets.only(bottom: 10, left: 16, right: 16),
-                            padding: const EdgeInsets.all(14),
-                            decoration: BoxDecoration(
-                              color: isUnlocked ? AppTheme.cardBg : AppTheme.deepSpace,
-                              borderRadius: BorderRadius.circular(14),
-                              border: Border.all(
-                                color: isRead
-                                    ? AppTheme.nebulaGreen.withOpacity(0.5)
-                                    : isUnlocked ? AppTheme.cardBorder : AppTheme.cardBorder.withOpacity(0.3),
+                          return GestureDetector(
+                            onTap: () => _openItem(originalIndex),
+                            child: Container(
+                              margin: const EdgeInsets.only(bottom: 10),
+                              padding: const EdgeInsets.all(14),
+                              decoration: BoxDecoration(
+                                color: isUnlocked ? AppTheme.cardBg : AppTheme.deepSpace,
+                                borderRadius: BorderRadius.circular(14),
+                                border: Border.all(
+                                  color: isRead
+                                      ? AppTheme.nebulaGreen.withOpacity(0.5)
+                                      : isUnlocked ? AppTheme.cardBorder : AppTheme.cardBorder.withOpacity(0.3),
+                                ),
+                              ),
+                              child: Row(
+                                children: [
+                                  Container(
+                                    width: 52, height: 52,
+                                    decoration: BoxDecoration(
+                                      color: Color(item.color).withOpacity(0.15),
+                                      shape: BoxShape.circle,
+                                    ),
+                                    child: isUnlocked
+                                        ? Center(child: Text(item.emoji, style: const TextStyle(fontSize: 26)))
+                                        : const Icon(Icons.lock, color: Color(0xFF6B7280), size: 24),
+                                  ),
+                                  const SizedBox(width: 14),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Row(
+                                          children: [
+                                            Text(
+                                              item.name,
+                                              style: TextStyle(
+                                                color: isUnlocked ? AppTheme.starlight : const Color(0xFF6B7280),
+                                                fontSize: 16,
+                                                fontWeight: FontWeight.w700,
+                                              ),
+                                            ),
+                                            if (isRead) ...[
+                                              const SizedBox(width: 6),
+                                              const Icon(Icons.check_circle, color: AppTheme.nebulaGreen, size: 16),
+                                            ],
+                                          ],
+                                        ),
+                                        Text(
+                                          displayText,
+                                          style: TextStyle(
+                                            color: isUnlocked ? const Color(0xFF9CA3AF) : const Color(0xFF4B5563),
+                                            fontSize: 12,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  Icon(
+                                    isUnlocked ? Icons.arrow_forward_ios : Icons.lock,
+                                    color: isUnlocked ? AppTheme.auroraBlue : const Color(0xFF4B5563),
+                                    size: 16,
+                                  ),
+                                ],
                               ),
                             ),
-                            child: Row(
-                              children: [
-                                Container(
-                                  width: 52, height: 52,
-                                  decoration: BoxDecoration(
-                                    color: Color(item.color).withOpacity(0.15),
-                                    shape: BoxShape.circle,
-                                  ),
-                                  child: isUnlocked
-                                      ? Center(child: Text(item.emoji, style: const TextStyle(fontSize: 26)))
-                                      : const Icon(Icons.lock, color: Color(0xFF6B7280), size: 24),
-                                ),
-                                const SizedBox(width: 14),
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      Row(
-                                        children: [
-                                          Text(
-                                            item.name,
-                                            style: TextStyle(
-                                              color: isUnlocked ? AppTheme.starlight : const Color(0xFF6B7280),
-                                              fontSize: 16,
-                                              fontWeight: FontWeight.w700,
-                                            ),
-                                          ),
-                                          if (isRead) ...[
-                                            const SizedBox(width: 6),
-                                            const Icon(Icons.check_circle, color: AppTheme.nebulaGreen, size: 16),
-                                          ],
-                                        ],
-                                      ),
-                                      Text(
-                                        displayText,
-                                        style: TextStyle(
-                                          color: isUnlocked ? const Color(0xFF9CA3AF) : const Color(0xFF4B5563),
-                                          fontSize: 12,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                                Icon(
-                                  isUnlocked ? Icons.arrow_forward_ios : Icons.lock,
-                                  color: isUnlocked ? AppTheme.auroraBlue : const Color(0xFF4B5563),
-                                  size: 16,
-                                ),
-                              ],
-                            ),
-                          ),
-                        );
+                          );
+                        } else {
+                          return _buildQuizCard();
+                        }
                       },
                     ),
                   ),
-                  _buildQuizCard(),
-                  const SizedBox(height: 80),
                 ],
               ),
       ),

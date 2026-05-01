@@ -272,7 +272,6 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  // Card Fenomena Hari Ini (tinggi diperkecil, lokasi bisa ditekan)
   Widget _buildFenomenaCard() {
     if (_loadingFenomena) {
       return const Center(child: CircularProgressIndicator());
@@ -291,7 +290,6 @@ class _HomeScreenState extends State<HomeScreen> {
       );
     }
 
-    // Tentukan teks lokasi
     String locationText = '';
     if (_position != null) {
       locationText = LocationService.instance.getLocationName(_position!.latitude, _position!.longitude);
@@ -315,11 +313,11 @@ class _HomeScreenState extends State<HomeScreen> {
         color: Colors.transparent,
         borderRadius: BorderRadius.circular(16),
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          padding: const EdgeInsets.all(12),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
             children: [
+              // Baris pertama: badge dan lokasi
               Row(
                 children: [
                   Container(
@@ -329,64 +327,48 @@ class _HomeScreenState extends State<HomeScreen> {
                       borderRadius: BorderRadius.circular(16),
                       border: Border.all(color: AppTheme.solarGold.withOpacity(0.5)),
                     ),
-                    child: const Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(Icons.flash_on, color: AppTheme.solarGold, size: 10),
-                        SizedBox(width: 2),
-                        Text('Fenomena Hari Ini',
-                            style: TextStyle(color: AppTheme.solarGold, fontSize: 9, fontWeight: FontWeight.w600)),
-                      ],
-                    ),
+                    child: const Text('Fenomena Hari Ini',
+                        style: TextStyle(color: AppTheme.solarGold, fontSize: 11, fontWeight: FontWeight.w600)),
                   ),
                   const Spacer(),
                   GestureDetector(
                     onTap: _requestLocationPermission,
                     child: Row(
                       children: [
-                        const Icon(Icons.location_on, size: 10, color: AppTheme.nebulaGreen),
+                        const Icon(Icons.location_on, size: 12, color: AppTheme.nebulaGreen),
                         const SizedBox(width: 2),
                         Text(
-                          locationText.length > 20 ? '${locationText.substring(0, 18)}...' : locationText,
-                          style: const TextStyle(color: AppTheme.nebulaGreen, fontSize: 8, decoration: TextDecoration.underline),
+                          locationText.length > 18 ? '${locationText.substring(0, 15)}...' : locationText,
+                          style: const TextStyle(color: AppTheme.nebulaGreen, fontSize: 10, decoration: TextDecoration.underline),
                         ),
                       ],
                     ),
                   ),
                 ],
               ),
-              const SizedBox(height: 6),
-              Row(
-                children: [
-                  const Text('☄️', style: TextStyle(fontSize: 20)),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          fenomena.nama,
-                          style: const TextStyle(color: AppTheme.starlight, fontSize: 14, fontWeight: FontWeight.w700),
-                        ),
-                        const SizedBox(height: 2),
-                        Text(
-                          fenomena.deskripsiSingkat,
-                          style: const TextStyle(color: Color(0xFF9CA3AF), fontSize: 10),
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
+              const SizedBox(height: 8),
+              // Judul fenomena
+              Text(
+                fenomena.nama,
+                style: const TextStyle(color: AppTheme.starlight, fontSize: 18, fontWeight: FontWeight.w700),
+              ),
+              const SizedBox(height: 4),
+              // Deskripsi singkat
+              Text(
+                fenomena.deskripsiSingkat,
+                style: const TextStyle(color: Color(0xFF9CA3AF), fontSize: 12),
               ),
               const SizedBox(height: 6),
+              // Tombol detail
               Align(
                 alignment: Alignment.centerRight,
                 child: TextButton(
                   onPressed: _showDetailFenomenaDialog,
-                  style: TextButton.styleFrom(padding: EdgeInsets.zero, minimumSize: const Size(0, 24)),
-                  child: const Text('Pelajari Lebih Lanjut →', style: TextStyle(color: AppTheme.auroraBlue, fontSize: 10)),
+                  style: TextButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 0, horizontal: 0),
+                    minimumSize: const Size(0, 26),
+                  ),
+                  child: const Text('Lihat Detail →', style: TextStyle(color: AppTheme.auroraBlue, fontSize: 12)),
                 ),
               ),
             ],
@@ -450,7 +432,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     m['image'] as String,
                     width: 36,
                     height: 36,
-                    color: Colors.white, // agar gambar menjadi putih (opsional)
+                    // Hapus color agar gambar tetap warna asli
                   ),
                   const SizedBox(height: 8),
                   Container(
