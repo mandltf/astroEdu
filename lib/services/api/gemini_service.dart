@@ -27,7 +27,9 @@ class GeminiService {
   Future<String> sendMessage(
     List<Map<String, String>> conversationHistory,
     String newMessage) async {
-
+    if (!_isAstronomyRelated(newMessage)) {
+      return "🚫 Hmm... itu di luar topik astronomi 😅\n\nCoba tanyakan tentang planet, bintang, galaksi, atau fenomena luar angkasa 🚀";
+    }
     if (AppConstants.geminiApiKey.isEmpty ||
         AppConstants.geminiApiKey == 'YOUR_GEMINI_API_KEY') {
       return _getOfflineResponse(newMessage);
@@ -65,5 +67,19 @@ class GeminiService {
       return '🕳️ Lubang hitam punya gravitasi sangat kuat, cahaya pun tak bisa lepas. Di pusat Bima Sakti ada Sagittarius A*, massanya 4 juta kali Matahari!';
     }
     return '🌠 Halo! Aku AstroBot. Koneksi internet sedang bermasalah, jadi aku pakai mode darurat. Tanyakan tentang planet, bintang, bulan, galaksi, atau lubang hitam ya! 🚀';
+  }
+
+  bool _isAstronomyRelated(String text) {
+    final keywords = [
+      'planet', 'bintang', 'galaksi', 'bulan', 'matahari',
+      'tata surya', 'orbit', 'asteroid', 'komet',
+      'black hole', 'lubang hitam', 'nebula',
+      'supernova', 'gravitasi', 'antariksa',
+      'rasi', 'konstelasi', 'meteor', 'gerhana'
+    ];
+
+    final lower = text.toLowerCase();
+
+    return keywords.any((k) => lower.contains(k));
   }
 }
