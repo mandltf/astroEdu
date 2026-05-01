@@ -49,12 +49,20 @@ class _CatchStarGameState extends State<CatchStarGame> {
   @override
   void initState() {
     super.initState();
-    // Dialog akan muncul setelah build selesai (hanya di halaman game)
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted && !_dialogShown && !_isGameStarted) {
-        _showStartDialog();
-      }
-    });
+    // Jangan langsung panggil dialog, tunggu sampai halaman benar-benar aktif
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Cek apakah halaman ini sedang ditampilkan
+    if (mounted && !_dialogShown && !_isGameStarted && ModalRoute.of(context)?.isCurrent == true) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted && !_dialogShown) {
+          _showStartDialog();
+        }
+      });
+    }
   }
 
   Future<void> _showStartDialog() async {
