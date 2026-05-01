@@ -435,7 +435,7 @@ Widget _buildTimeRow(String zona, String waktu) {
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 // Ikon Berubah
-                Text(emoji, style: const TextStyle(fontSize: 40)),
+                Text(emoji, style: const TextStyle(fontSize: 30)),
                 const SizedBox(width: 16),
                 Expanded(
                   child: Column(
@@ -445,7 +445,7 @@ Widget _buildTimeRow(String zona, String waktu) {
                         fenomena.nama,
                         style: const TextStyle(
                           color: Colors.white, 
-                          fontSize: 18, 
+                          fontSize: 16, 
                           fontWeight: FontWeight.bold,
                           letterSpacing: 0.5
                         ),
