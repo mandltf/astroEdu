@@ -14,7 +14,7 @@ class GeminiService {
     
     // API key diambil dari constants.dart
     _model = GenerativeModel(
-      model: 'gemini-1.5-flash',
+      model: 'gemini-1.5-flash-latest',
       apiKey: AppConstants.geminiApiKey,
       generationConfig: GenerationConfig(
         temperature: 0.7,
@@ -40,7 +40,10 @@ class GeminiService {
 
       final chat = _model.startChat(
         history: conversationHistory.map((m) {
-          return Content.text(m['message']!);
+          return Content(
+            m['role'] == 'user' ? 'user' : 'model',
+            [TextPart(m['message']!)],
+          );
         }).toList(),
       );
 
@@ -48,7 +51,7 @@ class GeminiService {
 
       return response.text ?? 'Tidak ada respon dari AI.';
     } catch (e) {
-      print('Gemini error: $e');
+      print("ERROR GEMINI: $e");
       return _getOfflineResponse(newMessage);
     }
   }
