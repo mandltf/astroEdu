@@ -217,7 +217,7 @@ class _ProfileScreenState extends State<ProfileScreen> with WidgetsBindingObserv
     final avgScore = _getAverageScore();
 
     return Scaffold(
-      appBar: AstroAppBar(title: '👤 Profil Saya'),
+      appBar: AstroAppBar(title: ' Profil Saya'),
       body: StarBackground(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(16),
@@ -264,7 +264,7 @@ class _ProfileScreenState extends State<ProfileScreen> with WidgetsBindingObserv
                 ],
               ),
               const SizedBox(height: 24),
-              const SectionTitle(title: '📊 Statistik Belajar'),
+              const SectionTitle(title: ' Statistik Belajar'),
               const SizedBox(height: 8),
               Container(
                 padding: const EdgeInsets.all(16),
@@ -300,14 +300,14 @@ class _ProfileScreenState extends State<ProfileScreen> with WidgetsBindingObserv
                       },
                     ),
               const SizedBox(height: 24),
-              const SectionTitle(title: '💬 Saran & Kesan'),
+              const SectionTitle(title: ' Saran & Kesan'),
               const SizedBox(height: 8),
               TextField(
                 onChanged: (v) => _saran = v,
                 controller: TextEditingController(text: _saran),
                 maxLines: 2,
                 style: const TextStyle(color: AppTheme.starlight),
-                decoration: const InputDecoration(labelText: 'Saran untuk AstroEdu'),
+                decoration: const InputDecoration(labelText: 'Saran untuk mk TPM'),
               ),
               const SizedBox(height: 12),
               TextField(
@@ -315,7 +315,7 @@ class _ProfileScreenState extends State<ProfileScreen> with WidgetsBindingObserv
                 controller: TextEditingController(text: _kesan),
                 maxLines: 2,
                 style: const TextStyle(color: AppTheme.starlight),
-                decoration: const InputDecoration(labelText: 'Kesan menggunakan AstroEdu'),
+                decoration: const InputDecoration(labelText: 'Kesan terhadap mk TPM'),
               ),
               const SizedBox(height: 16),
               SizedBox(width: double.infinity, child: ElevatedButton(onPressed: _saveSaranKesan, child: const Text('Simpan Saran & Kesan'))),
