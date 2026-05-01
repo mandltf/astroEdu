@@ -19,39 +19,17 @@ class _LoginScreenState extends State<LoginScreen> {
   bool _loading = false;
   bool _obscure = true;
   bool _biometricAvailable = false;
-  bool _hasExistingSession = false;  // tambahan
 
   @override
   void initState() {
     super.initState();
-    _init();
+    _checkBiometric();
   }
 
-  Future<void> _init() async {
-    await _checkBiometricAndSession();
-
-    // kalau sudah pernah login & ada biometrik
-    if (_biometricAvailable && _hasExistingSession) {
-      await Future.delayed(const Duration(milliseconds: 500));
-
-      final ok = await AuthService.instance.loginWithBiometric();
-
-      if (ok) {
-        _toHome();
-      }
-      // kalau gagal, biarin user login manual
-    }
-  }
-
-  Future<void> _checkBiometricAndSession() async {
+  Future<void> _checkBiometric() async {
+    // Cek apakah perangkat mendukung biometrik
     final available = await AuthService.instance.isBiometricAvailable();
-    final userId = await AuthService.instance.getCurrentUserId();
-    if (mounted) {
-      setState(() {
-        _biometricAvailable = available;
-        _hasExistingSession = userId != null; // true jika sudah pernah login
-      });
-    }
+    if (mounted) setState(() => _biometricAvailable = available);
   }
 
   Future<void> _login() async {
@@ -73,14 +51,15 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   Future<void> _biometricLogin() async {
-    // Pastikan ada session sebelumnya
-    final userId = await AuthService.instance.getCurrentUserId();
-    if (userId == null) {
-      _showError('Silakan login dengan email terlebih dahulu');
+    // Cek apakah ada session tersimpan (user pernah login sebelumnya)
+    final hasSession = await AuthService.instance.hasSavedSession();
+    if (!hasSession) {
+      _showError('Silakan login dengan email terlebih dahulu untuk menyimpan session');
       return;
     }
-    final ok = await AuthService.instance.loginWithBiometric();
-    if (ok) {
+    
+    final success = await AuthService.instance.loginWithBiometric();
+    if (success) {
       _toHome();
     } else {
       _showError('Autentikasi biometrik gagal');
@@ -185,8 +164,8 @@ class _LoginScreenState extends State<LoginScreen> {
                                 child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
                             : const Text('Masuk', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
                       ),
-                      // Biometrik hanya muncul jika device mendukung DAN sudah pernah login
-                      if (_biometricAvailable && _hasExistingSession) ...[
+                      // Tombol biometrik muncul jika perangkat mendukung
+                      if (_biometricAvailable) ...[
                         const SizedBox(height: 12),
                         OutlinedButton.icon(
                           onPressed: _biometricLogin,

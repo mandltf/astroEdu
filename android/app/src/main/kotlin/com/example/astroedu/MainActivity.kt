@@ -1,5 +1,11 @@
 package com.example.astroedu
 
-import io.flutter.embedding.android.FlutterActivity
+import io.flutter.embedding.android.FlutterFragmentActivity  // Ubah import ini
+import io.flutter.embedding.engine.FlutterEngine
+import io.flutter.plugins.GeneratedPluginRegistrant
 
-class MainActivity : FlutterActivity()
+class MainActivity : FlutterFragmentActivity() {  // Extends FlutterFragmentActivity, bukan FlutterActivity
+    override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
+        GeneratedPluginRegistrant.registerWith(flutterEngine)
+    }
+}
