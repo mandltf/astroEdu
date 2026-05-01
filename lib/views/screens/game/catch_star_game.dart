@@ -19,7 +19,7 @@ class _CatchStarGameState extends State<CatchStarGame> {
   late double _screenHeight;
   static const double _blackHoleSize = 90.0;
   static const double _starSize = 32.0;
-  static const double _speedFactor = 0.28;
+  static const double _speedFactor = 0.9;
   static const int _winScore = 20;
 
   double _blackHoleX = 0.5;
@@ -136,22 +136,28 @@ class _CatchStarGameState extends State<CatchStarGame> {
 
   void _startSensors() {
     _accelerometerSub?.cancel();
+
     _accelerometerSub = accelerometerEvents.listen((event) {
       if (_isGameOver || _isWin || !mounted) return;
-      
-      // event.x: 
-      // - nilai negatif (misal -5.0) = miring ke kiri
-      // - nilai positif (misal +5.0) = miring ke kanan
-      double tilt = event.x / 9.8;
+
+      // 1. BALIK ARAH (biar kanan = kanan)
+      double tilt = -event.x / 9.8;
+
+      // 2. LIMIT biar gak over
       tilt = tilt.clamp(-1.0, 1.0);
-      
-      // PERGERAKAN DIBALIK AGAR SESUAI:
-      // Miring ke kanan (tilt positif) -> object ke kanan (+)
-      // Miring ke kiri (tilt negatif) -> object ke kiri (-)
-      // Formula: speed = tilt * speedFactor
-      double speed = tilt * _speedFactor;
+
+      // 3. DEADZONE (biar gak goyang dikit langsung gerak)
+      if (tilt.abs() < 0.05) tilt = 0;
+
+      // 4. NON-LINEAR (makin miring makin ngebut)
+      double speed = tilt * tilt * _speedFactor * tilt.sign;
+
+      // 5. BOOST biar lebih responsif
+      speed *= 1.5;
+
+      // 6. UPDATE POSISI
       double newX = (_blackHoleX + speed).clamp(0.0, 1.0);
-      
+
       setState(() {
         _blackHoleX = newX;
         _actualLeft = _blackHoleX * (_screenWidth - _blackHoleSize);
