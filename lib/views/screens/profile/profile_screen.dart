@@ -1,4 +1,3 @@
-// lib/views/screens/profile/profile_screen.dart
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
@@ -8,6 +7,7 @@ import '../../../utils/app_theme.dart';
 import '../../widgets/star_background.dart';
 import '../../widgets/common_widgets.dart';
 import '../auth/login_screen.dart';
+import 'edit_profile_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -19,7 +19,6 @@ class ProfileScreen extends StatefulWidget {
 class _ProfileScreenState extends State<ProfileScreen> with WidgetsBindingObserver {
   Map<String, dynamic>? _user;
   List<Map<String, dynamic>> _quizScores = [];
-  List<Map<String, dynamic>> _boughtStars = [];
   String _saran = '';
   String _kesan = '';
   bool _loading = true;
@@ -35,13 +34,6 @@ class _ProfileScreenState extends State<ProfileScreen> with WidgetsBindingObserv
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
     super.dispose();
-  }
-
-  @override
-  void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (state == AppLifecycleState.resumed) {
-      _loadProfile();
-    }
   }
 
   @override
@@ -61,19 +53,16 @@ class _ProfileScreenState extends State<ProfileScreen> with WidgetsBindingObserv
     }
     final user = await DatabaseHelper.instance.getUserById(userId);
     final scores = await DatabaseHelper.instance.getQuizScores(userId);
-    final stars = await DatabaseHelper.instance.getBoughtStars(userId);
     final sk = await DatabaseHelper.instance.getSaranKesan(userId);
     setState(() {
       _user = user;
       _quizScores = scores;
-      _boughtStars = stars;
       _saran = sk?['saran'] ?? '';
       _kesan = sk?['kesan'] ?? '';
       _loading = false;
     });
   }
 
-  /// Menghitung rata-rata nilai kuis dalam persen
   double _getAverageScore() {
     if (_quizScores.isEmpty) return 0.0;
     double totalPercent = 0.0;
@@ -99,60 +88,6 @@ class _ProfileScreenState extends State<ProfileScreen> with WidgetsBindingObserv
     }
   }
 
-  Future<void> _editName() async {
-    final TextEditingController controller = TextEditingController(text: _user!['name']);
-    final result = await showDialog<String>(
-      context: context,
-      builder: (_) => AlertDialog(
-        backgroundColor: AppTheme.cardBg,
-        title: const Text('Ubah Nama', style: TextStyle(color: AppTheme.starlight)),
-        content: TextField(
-          controller: controller,
-          style: const TextStyle(color: AppTheme.starlight),
-          decoration: const InputDecoration(labelText: 'Nama baru'),
-        ),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: const Text('Batal', style: TextStyle(color: AppTheme.marsRed))),
-          ElevatedButton(onPressed: () => Navigator.pop(context, controller.text.trim()), child: const Text('Simpan')),
-        ],
-      ),
-    );
-    if (result != null && result.isNotEmpty && result != _user!['name']) {
-      await _updateUserField('name', result);
-    }
-  }
-
-  Future<void> _editEmail() async {
-    final TextEditingController controller = TextEditingController(text: _user!['email']);
-    final result = await showDialog<String>(
-      context: context,
-      builder: (_) => AlertDialog(
-        backgroundColor: AppTheme.cardBg,
-        title: const Text('Ubah Email', style: TextStyle(color: AppTheme.starlight)),
-        content: TextField(
-          controller: controller,
-          style: const TextStyle(color: AppTheme.starlight),
-          decoration: const InputDecoration(labelText: 'Email baru'),
-          keyboardType: TextInputType.emailAddress,
-        ),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: const Text('Batal', style: TextStyle(color: AppTheme.marsRed))),
-          ElevatedButton(onPressed: () => Navigator.pop(context, controller.text.trim()), child: const Text('Simpan')),
-        ],
-      ),
-    );
-    if (result != null && result.isNotEmpty && result != _user!['email']) {
-      final existing = await DatabaseHelper.instance.getUserByEmail(result);
-      if (existing != null && existing['id'] != _user!['id']) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Email sudah terdaftar'), backgroundColor: AppTheme.marsRed),
-        );
-        return;
-      }
-      await _updateUserField('email', result);
-    }
-  }
-
   Future<void> _editPhoto() async {
     final picker = ImagePicker();
     final XFile? pickedFile = await picker.pickImage(source: ImageSource.gallery);
@@ -166,12 +101,75 @@ class _ProfileScreenState extends State<ProfileScreen> with WidgetsBindingObserv
     }
   }
 
-  Future<void> _saveSaranKesan() async {
-    final userId = _user?['id'];
-    if (userId == null) return;
-    await DatabaseHelper.instance.saveSaranKesan(userId, _saran, _kesan);
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Terima kasih atas masukan Anda!')),
+  Future<void> _showSaranDialog() async {
+    TextEditingController controller = TextEditingController(text: _saran);
+    await showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: AppTheme.cardBg,
+        title: const Text('Saran untuk mk TPM', style: TextStyle(color: AppTheme.starlight)),
+        content: TextField(
+          controller: controller,
+          maxLines: 3,
+          style: const TextStyle(color: AppTheme.starlight),
+          decoration: const InputDecoration(hintText: 'Tulis saran Anda...'),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Batal', style: TextStyle(color: AppTheme.marsRed)),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              final userId = _user!['id'];
+              final saranBaru = controller.text.trim();
+              await DatabaseHelper.instance.saveSaranKesan(userId, saranBaru, _kesan);
+              setState(() => _saran = saranBaru);
+              if (mounted) Navigator.pop(context);
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Saran disimpan'), backgroundColor: AppTheme.nebulaGreen),
+              );
+            },
+            child: const Text('Simpan'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _showKesanDialog() async {
+    TextEditingController controller = TextEditingController(text: _kesan);
+    await showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: AppTheme.cardBg,
+        title: const Text('Kesan terhadap mk TPM', style: TextStyle(color: AppTheme.starlight)),
+        content: TextField(
+          controller: controller,
+          maxLines: 3,
+          style: const TextStyle(color: AppTheme.starlight),
+          decoration: const InputDecoration(hintText: 'Tulis kesan Anda...'),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Batal', style: TextStyle(color: AppTheme.marsRed)),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              final userId = _user!['id'];
+              final kesanBaru = controller.text.trim();
+              await DatabaseHelper.instance.saveSaranKesan(userId, _saran, kesanBaru);
+              setState(() => _kesan = kesanBaru);
+              if (mounted) Navigator.pop(context);
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Kesan disimpan'), backgroundColor: AppTheme.nebulaGreen),
+              );
+            },
+            child: const Text('Simpan'),
+          ),
+        ],
+      ),
     );
   }
 
@@ -217,13 +215,13 @@ class _ProfileScreenState extends State<ProfileScreen> with WidgetsBindingObserv
     final avgScore = _getAverageScore();
 
     return Scaffold(
-      appBar: AstroAppBar(title: ' Profil Saya'),
+      appBar: AstroAppBar(title: 'Profil Saya'),
       body: StarBackground(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(16),
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              // Header Avatar + Nama + Email
               Row(
                 children: [
                   GestureDetector(
@@ -246,26 +244,16 @@ class _ProfileScreenState extends State<ProfileScreen> with WidgetsBindingObserv
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Row(
-                          children: [
-                            Expanded(child: Text(_user!['name'], style: const TextStyle(color: AppTheme.starlight, fontSize: 20, fontWeight: FontWeight.w700))),
-                            IconButton(icon: const Icon(Icons.edit, size: 18, color: AppTheme.auroraBlue), onPressed: _editName, padding: EdgeInsets.zero, constraints: const BoxConstraints()),
-                          ],
-                        ),
-                        Row(
-                          children: [
-                            Expanded(child: Text(_user!['email'], style: const TextStyle(color: Color(0xFF9CA3AF)))),
-                            IconButton(icon: const Icon(Icons.edit, size: 16, color: AppTheme.auroraBlue), onPressed: _editEmail, padding: EdgeInsets.zero, constraints: const BoxConstraints()),
-                          ],
-                        ),
+                        Text(_user!['name'], style: const TextStyle(color: AppTheme.starlight, fontSize: 20, fontWeight: FontWeight.w700)),
+                        const SizedBox(height: 2),
+                        Text(_user!['email'], style: const TextStyle(color: Color(0xFF9CA3AF))),
                       ],
                     ),
                   ),
                 ],
               ),
               const SizedBox(height: 24),
-              const SectionTitle(title: ' Statistik Belajar'),
-              const SizedBox(height: 8),
+              // Statistik Belajar (Jumlah Kuis, Rata-rata)
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
@@ -282,45 +270,35 @@ class _ProfileScreenState extends State<ProfileScreen> with WidgetsBindingObserv
                 ),
               ),
               const SizedBox(height: 24),
-              const SectionTitle(title: '⭐ Bintang yang Dibeli'),
-              const SizedBox(height: 8),
-              _boughtStars.isEmpty
-                  ? const Text('Belum ada bintang yang dibeli', style: TextStyle(color: Color(0xFF9CA3AF)))
-                  : ListView.builder(
-                      shrinkWrap: true,
-                      physics: const NeverScrollableScrollPhysics(),
-                      itemCount: _boughtStars.length,
-                      itemBuilder: (_, i) {
-                        final s = _boughtStars[i];
-                        return ListTile(
-                          leading: const Icon(Icons.star, color: AppTheme.solarGold),
-                          title: Text(s['custom_name'], style: const TextStyle(color: AppTheme.starlight)),
-                          subtitle: Text('${s['star_name']} - Rp ${(s['price_idr'] as double).toStringAsFixed(0)}'),
-                        );
-                      },
-                    ),
-              const SizedBox(height: 24),
-              const SectionTitle(title: ' Saran & Kesan'),
-              const SizedBox(height: 8),
-              TextField(
-                onChanged: (v) => _saran = v,
-                controller: TextEditingController(text: _saran),
-                maxLines: 2,
-                style: const TextStyle(color: AppTheme.starlight),
-                decoration: const InputDecoration(labelText: 'Saran untuk mk TPM'),
+              // Menu
+              _menuTile(
+                icon: Icons.person_outline,
+                title: 'Edit Profil',
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const EditProfileScreen()),
+                  ).then((_) => _loadProfile()); // refresh setelah kembali
+                },
               ),
-              const SizedBox(height: 12),
-              TextField(
-                onChanged: (v) => _kesan = v,
-                controller: TextEditingController(text: _kesan),
-                maxLines: 2,
-                style: const TextStyle(color: AppTheme.starlight),
-                decoration: const InputDecoration(labelText: 'Kesan terhadap mk TPM'),
+              _menuTile(
+                icon: Icons.feedback_outlined,
+                title: 'Saran',
+                onTap: _showSaranDialog,
+                trailing: _saran.isNotEmpty ? Text(_saran.length > 30 ? '${_saran.substring(0, 30)}...' : _saran, style: const TextStyle(color: AppTheme.nebulaGreen, fontSize: 12)) : null,
               ),
-              const SizedBox(height: 16),
-              SizedBox(width: double.infinity, child: ElevatedButton(onPressed: _saveSaranKesan, child: const Text('Simpan Saran & Kesan'))),
-              const SizedBox(height: 24),
-              SizedBox(width: double.infinity, child: OutlinedButton(onPressed: _logout, style: OutlinedButton.styleFrom(side: const BorderSide(color: AppTheme.marsRed)), child: const Text('Logout', style: TextStyle(color: AppTheme.marsRed)))),
+              _menuTile(
+                icon: Icons.emoji_emotions_outlined,
+                title: 'Kesan',
+                onTap: _showKesanDialog,
+                trailing: _kesan.isNotEmpty ? Text(_kesan.length > 30 ? '${_kesan.substring(0, 30)}...' : _kesan, style: const TextStyle(color: AppTheme.nebulaGreen, fontSize: 12)) : null,
+              ),
+              _menuTile(
+                icon: Icons.logout,
+                title: 'Logout',
+                onTap: _logout,
+                isDestructive: true,
+              ),
               const SizedBox(height: 40),
             ],
           ),
@@ -335,6 +313,20 @@ class _ProfileScreenState extends State<ProfileScreen> with WidgetsBindingObserv
         Text(value.toString(), style: const TextStyle(color: AppTheme.auroraBlue, fontSize: 20, fontWeight: FontWeight.w700)),
         Text(label, style: const TextStyle(color: Color(0xFF9CA3AF), fontSize: 12)),
       ],
+    );
+  }
+
+  Widget _menuTile({required IconData icon, required String title, required VoidCallback onTap, Widget? trailing, bool isDestructive = false}) {
+    return Card(
+      margin: const EdgeInsets.only(bottom: 8),
+      color: AppTheme.cardBg,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      child: ListTile(
+        leading: Icon(icon, color: isDestructive ? AppTheme.marsRed : AppTheme.auroraBlue),
+        title: Text(title, style: TextStyle(color: isDestructive ? AppTheme.marsRed : AppTheme.starlight)),
+        trailing: trailing ?? const Icon(Icons.chevron_right, color: AppTheme.auroraBlue),
+        onTap: onTap,
+      ),
     );
   }
 }
