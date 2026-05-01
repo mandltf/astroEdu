@@ -451,11 +451,6 @@ Widget _buildTimeRow(String zona, String waktu) {
                         ),
                       ),
                       const SizedBox(height: 4),
-                      Text(
-                        fenomena.deskripsiSingkat,
-                        style: const TextStyle(color: Color(0xFF94A3B8), fontSize: 13),
-                      ),
-                      const SizedBox(height: 4),
                       // Waktu dan Puncak
                       Text(
                         'Puncak: ${fenomena.tanggal}, Waktu terbaik: $bestTimeLocal $userTimezone',
