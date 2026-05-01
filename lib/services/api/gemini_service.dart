@@ -14,7 +14,7 @@ class GeminiService {
     
     // API key diambil dari constants.dart
     _model = GenerativeModel(
-      model: 'gemini-pro',
+      model: 'gemini-1.5-flash',
       apiKey: AppConstants.geminiApiKey,
       generationConfig: GenerationConfig(
         temperature: 0.7,
@@ -24,22 +24,29 @@ class GeminiService {
     _initialized = true;
   }
 
-  Future<String> sendMessage(List<Map<String, String>> conversationHistory, String newMessage) async {
-    // Cek API key
-    if (AppConstants.geminiApiKey.isEmpty || AppConstants.geminiApiKey == 'YOUR_GEMINI_API_KEY') {
-      if (kDebugMode) print('Gemini API key not set. Using offline mode.');
+  Future<String> sendMessage(
+    List<Map<String, String>> conversationHistory,
+    String newMessage) async {
+
+    if (AppConstants.geminiApiKey.isEmpty ||
+        AppConstants.geminiApiKey == 'YOUR_GEMINI_API_KEY') {
       return _getOfflineResponse(newMessage);
     }
 
     try {
       await _init();
-      // Mulai chat session
-      final chat = _model.startChat();
-      // Kirim pesan pengguna
+
+      final chat = _model.startChat(
+        history: conversationHistory.map((m) {
+          return Content.text(m['message']!);
+        }).toList(),
+      );
+
       final response = await chat.sendMessage(Content.text(newMessage));
-      return response.text ?? 'Maaf, saya tidak bisa menjawab saat ini.';
+
+      return response.text ?? 'Tidak ada respon dari AI.';
     } catch (e) {
-      if (kDebugMode) print('Gemini error: $e');
+      print('Gemini error: $e');
       return _getOfflineResponse(newMessage);
     }
   }
