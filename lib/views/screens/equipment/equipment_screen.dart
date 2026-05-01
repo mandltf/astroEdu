@@ -134,7 +134,7 @@ class _EquipmentScreenState extends State<EquipmentScreen> {
                           borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
                           child: Image.asset(
                             item['image'],
-                            height: 110, // Dinaikkan sedikit biar gambar proporsional
+                            height: 115, // Dinaikkan sedikit biar gambar proporsional
                             width: double.infinity,
                             fit: BoxFit.cover,
                             errorBuilder: (_, __, ___) => Container(
@@ -165,7 +165,7 @@ class _EquipmentScreenState extends State<EquipmentScreen> {
                                 maxLines: 2,
                                 overflow: TextOverflow.ellipsis,
                               ),
-                              const SizedBox(height: 4),
+                              const SizedBox(height: 5),
                               Text(
                                 item['description'],
                                 style: const TextStyle(

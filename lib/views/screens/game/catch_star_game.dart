@@ -20,7 +20,7 @@ class _CatchStarGameState extends State<CatchStarGame> {
   static const double _blackHoleSize = 90.0;
   static const double _starSize = 32.0;
   static const double _speedFactor = 0.28;
-  static const int _winScore = 20; // Skor untuk menang (30 bintang)
+  static const int _winScore = 20;
 
   double _blackHoleX = 0.5;
   double _actualLeft = 0.0;
@@ -30,7 +30,7 @@ class _CatchStarGameState extends State<CatchStarGame> {
   int _score = 0;
   int _lives = 5;
   bool _isGameOver = false;
-  bool _isWin = false;        // Status kemenangan
+  bool _isWin = false;
   bool _isGameStarted = false;
   bool _dialogShown = false;
 
@@ -49,8 +49,9 @@ class _CatchStarGameState extends State<CatchStarGame> {
   @override
   void initState() {
     super.initState();
+    // Dialog akan muncul setelah build selesai (hanya di halaman game)
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted && !_dialogShown) {
+      if (mounted && !_dialogShown && !_isGameStarted) {
         _showStartDialog();
       }
     });
@@ -130,9 +131,16 @@ class _CatchStarGameState extends State<CatchStarGame> {
     _accelerometerSub = accelerometerEvents.listen((event) {
       if (_isGameOver || _isWin || !mounted) return;
       
+      // event.x: 
+      // - nilai negatif (misal -5.0) = miring ke kiri
+      // - nilai positif (misal +5.0) = miring ke kanan
       double tilt = event.x / 9.8;
       tilt = tilt.clamp(-1.0, 1.0);
       
+      // PERGERAKAN DIBALIK AGAR SESUAI:
+      // Miring ke kanan (tilt positif) -> object ke kanan (+)
+      // Miring ke kiri (tilt negatif) -> object ke kiri (-)
+      // Formula: speed = tilt * speedFactor
       double speed = tilt * _speedFactor;
       double newX = (_blackHoleX + speed).clamp(0.0, 1.0);
       
@@ -190,7 +198,6 @@ class _CatchStarGameState extends State<CatchStarGame> {
       if (isColliding) {
         _score++;
         
-        // Cek apakah sudah menang
         if (_score >= _winScore) {
           _isWin = true;
           _stopGame();
@@ -254,6 +261,13 @@ class _CatchStarGameState extends State<CatchStarGame> {
               _resetAndStart();
             },
             child: const Text('Main Lagi'),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context);
+              Navigator.pop(context);
+            },
+            child: const Text('Kembali', style: TextStyle(color: AppTheme.auroraBlue)),
           ),
         ],
       ),
@@ -323,6 +337,7 @@ class _CatchStarGameState extends State<CatchStarGame> {
       _actualLeft = _blackHoleX * (_screenWidth - _blackHoleSize);
     }
 
+    // Loading sebelum game dimulai
     if (!_isGameStarted) {
       return Scaffold(
         appBar: AstroAppBar(title: '🎮 Black Hole Game'),
@@ -334,7 +349,7 @@ class _CatchStarGameState extends State<CatchStarGame> {
       );
     }
 
-    // Tampilkan overlay WIN jika sudah menang
+    // Tampilan menang
     if (_isWin) {
       return Scaffold(
         appBar: AstroAppBar(title: '🎮 Black Hole Game'),
@@ -385,6 +400,7 @@ class _CatchStarGameState extends State<CatchStarGame> {
       );
     }
 
+    // Tampilan game aktif
     return Scaffold(
       appBar: AstroAppBar(title: '🎮 Black Hole Game'),
       body: StarBackground(
@@ -418,7 +434,7 @@ class _CatchStarGameState extends State<CatchStarGame> {
                 ),
               ),
             ),
-            // Progress bar menuju kemenangan
+            // Progress bar
             Positioned(
               top: 60,
               left: 16,
