@@ -18,6 +18,7 @@ import '../planet/planet_list_screen.dart';
 import '../rasi/rasi_list_screen.dart';
 import '../gerhana/gerhana_list_screen.dart';
 import '../galaksi/galaksi_list_screen.dart';
+import '../../../utils/timezone_helper.dart';
 // import '../buy_star/buy_star_screen.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -129,60 +130,118 @@ class _HomeScreenState extends State<HomeScreen> {
     await _loadLocation();
   }
 
-  void _showDetailFenomenaDialog() {
-    if (_fenomenaHariIni == null) return;
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: AppTheme.cardBg,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: Row(
-          children: [
-            const Text('☄️', style: TextStyle(fontSize: 28)),
-            const SizedBox(width: 10),
-            Expanded(
-              child: Text(
-                _fenomenaHariIni!.nama,
-                style: const TextStyle(color: AppTheme.starlight, fontWeight: FontWeight.bold),
-              ),
+  void _showDetailFenomenaDialog(
+  FenomenaModel fenomena,
+  String bestTimeWIB,
+  String bestTimeWITA,
+  String bestTimeWIT,
+  String bestTimeLondon,
+  String bestTimeUTC,
+  String userTimezone,
+) {
+  showDialog(
+    context: context,
+    builder: (context) => AlertDialog(
+      backgroundColor: AppTheme.cardBg,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      title: Row(
+        children: [
+          const Text('☄️', style: TextStyle(fontSize: 28)),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              fenomena.nama,
+              style: const TextStyle(color: AppTheme.starlight, fontWeight: FontWeight.bold),
             ),
-          ],
-        ),
-        content: SingleChildScrollView(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(_fenomenaHariIni!.deskripsiLengkap, style: const TextStyle(color: Color(0xFFD1D5DB), height: 1.5)),
-              const SizedBox(height: 16),
-              const Text('🌟 Poin Penting:', style: TextStyle(color: AppTheme.solarGold, fontWeight: FontWeight.w600)),
-              const SizedBox(height: 8),
-              ..._fenomenaHariIni!.poinPelajaran.map(
-                (poin) => Padding(
-                  padding: const EdgeInsets.only(bottom: 6),
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text('• ', style: TextStyle(color: AppTheme.auroraBlue)),
-                      Expanded(child: Text(poin, style: const TextStyle(color: Color(0xFF9CA3AF)))),
-                    ],
-                  ),
-                ),
-              ),
-              const SizedBox(height: 12),
-              Text('Sumber: ${_fenomenaHariIni!.sumber}', style: const TextStyle(color: Color(0xFF6B7280), fontSize: 10)),
-            ],
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Tutup', style: TextStyle(color: AppTheme.auroraBlue)),
           ),
         ],
       ),
-    );
-  }
+      content: SingleChildScrollView(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(fenomena.deskripsiLengkap, style: const TextStyle(color: Color(0xFFD1D5DB), height: 1.5)),
+            const SizedBox(height: 16),
+            
+            // Tabel waktu pengamatan
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: AppTheme.deepSpace,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: AppTheme.cardBorder),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    '⏰ Waktu Terbaik Pengamatan:',
+                    style: TextStyle(color: AppTheme.solarGold, fontWeight: FontWeight.w600, fontSize: 13),
+                  ),
+                  const SizedBox(height: 8),
+                  // Tabel sederhana
+                  _buildTimeRow('UTC', bestTimeUTC),
+                  _buildTimeRow('London (BST)', bestTimeLondon),
+                  _buildTimeRow('WIB (Jakarta)', bestTimeWIB),
+                  _buildTimeRow('WITA (Makassar)', bestTimeWITA),
+                  _buildTimeRow('WIT (Jayapura)', bestTimeWIT),
+                  const SizedBox(height: 8),
+                  Text(
+                    '*Zona waktu terdeteksi: $userTimezone',
+                    style: const TextStyle(color: Color(0xFF6B7280), fontSize: 10),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 16),
+            
+            const Text('🌟 Poin Penting:', style: TextStyle(color: AppTheme.solarGold, fontWeight: FontWeight.w600)),
+            const SizedBox(height: 8),
+            ...fenomena.poinPelajaran.map(
+              (poin) => Padding(
+                padding: const EdgeInsets.only(bottom: 6),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text('• ', style: TextStyle(color: AppTheme.auroraBlue)),
+                    Expanded(child: Text(poin, style: const TextStyle(color: Color(0xFF9CA3AF)))),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(height: 12),
+            Text('Sumber: ${fenomena.sumber}', style: const TextStyle(color: Color(0xFF6B7280), fontSize: 10)),
+          ],
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: const Text('Tutup', style: TextStyle(color: AppTheme.auroraBlue)),
+        ),
+      ],
+    ),
+  );
+}
+
+// Helper widget untuk baris tabel waktu
+Widget _buildTimeRow(String zona, String waktu) {
+  return Padding(
+    padding: const EdgeInsets.symmetric(vertical: 2),
+    child: Row(
+      children: [
+        SizedBox(
+          width: 110,
+          child: Text(zona, style: const TextStyle(color: Color(0xFF9CA3AF), fontSize: 12)),
+        ),
+        Text(':', style: const TextStyle(color: AppTheme.auroraBlue, fontSize: 12)),
+        const SizedBox(width: 12),
+        Text(waktu, style: const TextStyle(color: AppTheme.starlight, fontSize: 12)),
+      ],
+    ),
+  );
+}
 
   @override
   Widget build(BuildContext context) {
@@ -274,110 +333,128 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildFenomenaCard() {
-    if (_loadingFenomena) {
-      return const Center(child: CircularProgressIndicator());
-    }
-    final fenomena = _fenomenaHariIni;
-    if (fenomena == null) {
-      return Container(
-        padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(
-          color: AppTheme.cardBg,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: AppTheme.cardBorder),
-        ),
-        child: const Text('Tidak ada fenomena astronomi signifikan hari ini.\nTetap pelajari materi lainnya!',
-            style: TextStyle(color: Color(0xFF9CA3AF), fontSize: 12)),
-      );
-    }
-
-    String locationText = '';
-    if (_position != null) {
-      locationText = LocationService.instance.getLocationName(_position!.latitude, _position!.longitude);
-    } else if (_loadingLocation) {
-      locationText = 'Mencari lokasi...';
-    } else {
-      locationText = 'Aktifkan lokasi';
-    }
-
+  if (_loadingFenomena) {
+    return const Center(child: CircularProgressIndicator());
+  }
+  final fenomena = _fenomenaHariIni;
+  if (fenomena == null) {
     return Container(
+      padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [Color(0xFF2D1B4E), Color(0xFF1A2A4A)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
+        color: AppTheme.cardBg,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: AppTheme.cardBorder),
       ),
-      child: Material(
-        color: Colors.transparent,
-        borderRadius: BorderRadius.circular(16),
-        child: Padding(
-          padding: const EdgeInsets.all(12),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Baris pertama: badge dan lokasi
-              Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                    decoration: BoxDecoration(
-                      color: AppTheme.solarGold.withOpacity(0.2),
-                      borderRadius: BorderRadius.circular(16),
-                      border: Border.all(color: AppTheme.solarGold.withOpacity(0.5)),
-                    ),
-                    child: const Text('Fenomena Hari Ini',
-                        style: TextStyle(color: AppTheme.solarGold, fontSize: 11, fontWeight: FontWeight.w600)),
-                  ),
-                  const Spacer(),
-                  GestureDetector(
-                    onTap: _requestLocationPermission,
-                    child: Row(
-                      children: [
-                        const Icon(Icons.location_on, size: 12, color: AppTheme.nebulaGreen),
-                        const SizedBox(width: 2),
-                        Text(
-                          locationText.length > 18 ? '${locationText.substring(0, 15)}...' : locationText,
-                          style: const TextStyle(color: AppTheme.nebulaGreen, fontSize: 10, decoration: TextDecoration.underline),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 8),
-              // Judul fenomena
-              Text(
-                fenomena.nama,
-                style: const TextStyle(color: AppTheme.starlight, fontSize: 18, fontWeight: FontWeight.w700),
-              ),
-              const SizedBox(height: 4),
-              // Deskripsi singkat
-              Text(
-                fenomena.deskripsiSingkat,
-                style: const TextStyle(color: Color(0xFF9CA3AF), fontSize: 12),
-              ),
-              const SizedBox(height: 6),
-              // Tombol detail
-              Align(
-                alignment: Alignment.centerRight,
-                child: TextButton(
-                  onPressed: _showDetailFenomenaDialog,
-                  style: TextButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 0, horizontal: 0),
-                    minimumSize: const Size(0, 26),
-                  ),
-                  child: const Text('Lihat Detail →', style: TextStyle(color: AppTheme.auroraBlue, fontSize: 12)),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
+      child: const Text('Tidak ada fenomena astronomi signifikan hari ini.\nTetap pelajari materi lainnya!',
+          style: TextStyle(color: Color(0xFF9CA3AF), fontSize: 12)),
     );
   }
+
+  String locationText = '';
+  if (_position != null) {
+    locationText = LocationService.instance.getLocationName(_position!.latitude, _position!.longitude);
+  } else if (_loadingLocation) {
+    locationText = 'Mencari lokasi...';
+  } else {
+    locationText = 'Aktifkan lokasi';
+  }
+  
+  // Dapatkan zona waktu user
+  String userTimezone = 'WIB';
+  if (_position != null) {
+    userTimezone = TimezoneHelper.getUserTimezone(_position!.latitude, _position!.longitude);
+  }
+  
+  // Konversi waktu terbaik ke zona waktu user
+  String bestTimeLocal = TimezoneHelper.convertToTimezone(fenomena.waktuTerbaikUtc, userTimezone);
+  String bestTimeWIB = TimezoneHelper.convertToTimezone(fenomena.waktuTerbaikUtc, 'WIB');
+  String bestTimeWITA = TimezoneHelper.convertToTimezone(fenomena.waktuTerbaikUtc, 'WITA');
+  String bestTimeWIT = TimezoneHelper.convertToTimezone(fenomena.waktuTerbaikUtc, 'WIT');
+  String bestTimeLondon = TimezoneHelper.convertToTimezone(fenomena.waktuTerbaikUtc, 'London');
+  String bestTimeUTC = fenomena.waktuTerbaikUtc;
+
+  return Container(
+    decoration: BoxDecoration(
+      gradient: const LinearGradient(
+        colors: [Color(0xFF2D1B4E), Color(0xFF1A2A4A)],
+        begin: Alignment.topLeft,
+        end: Alignment.bottomRight,
+      ),
+      borderRadius: BorderRadius.circular(16),
+      border: Border.all(color: AppTheme.cardBorder),
+    ),
+    child: Material(
+      color: Colors.transparent,
+      borderRadius: BorderRadius.circular(16),
+      child: Padding(
+        padding: const EdgeInsets.all(12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Baris pertama: badge dan lokasi
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                  decoration: BoxDecoration(
+                    color: AppTheme.solarGold.withOpacity(0.2),
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: AppTheme.solarGold.withOpacity(0.5)),
+                  ),
+                  child: const Text('Fenomena Hari Ini',
+                      style: TextStyle(color: AppTheme.solarGold, fontSize: 11, fontWeight: FontWeight.w600)),
+                ),
+                const Spacer(),
+                GestureDetector(
+                  onTap: _requestLocationPermission,
+                  child: Row(
+                    children: [
+                      const Icon(Icons.location_on, size: 12, color: AppTheme.nebulaGreen),
+                      const SizedBox(width: 2),
+                      Text(
+                        locationText.length > 18 ? '${locationText.substring(0, 15)}...' : locationText,
+                        style: const TextStyle(color: AppTheme.nebulaGreen, fontSize: 10, decoration: TextDecoration.underline),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            // Judul fenomena
+            Text(
+              fenomena.nama,
+              style: const TextStyle(color: AppTheme.starlight, fontSize: 16, fontWeight: FontWeight.w700),
+            ),
+            const SizedBox(height: 4),
+            // Deskripsi singkat + waktu terbaik
+            Text(
+              '${fenomena.deskripsiSingkat}\n⏰ Waktu terbaik: $bestTimeLocal $userTimezone',
+              style: const TextStyle(color: Color(0xFF9CA3AF), fontSize: 11),
+            ),
+            const SizedBox(height: 6),
+            // Tombol detail
+            Align(
+              alignment: Alignment.centerRight,
+              child: TextButton(
+                onPressed: () => _showDetailFenomenaDialog(
+                  fenomena, 
+                  bestTimeWIB, bestTimeWITA, bestTimeWIT, 
+                  bestTimeLondon, bestTimeUTC, userTimezone
+                ),
+                style: TextButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(vertical: 0, horizontal: 0),
+                  minimumSize: const Size(0, 26),
+                ),
+                child: const Text('Lihat Detail →', style: TextStyle(color: AppTheme.auroraBlue, fontSize: 12)),
+              ),
+            ),
+          ],
+        ),
+      ),
+    ),
+  );
+}
 
   Widget _buildMenuGrid() {
     final menus = [

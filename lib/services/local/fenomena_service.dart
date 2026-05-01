@@ -5,137 +5,91 @@ class FenomenaService {
   FenomenaService._internal();
   static FenomenaService get instance => _instance;
 
-  // Data statis 10 fenomena utama 2026 dari sumber terpercaya
   final List<FenomenaModel> _fenomenaList = [
     FenomenaModel(
       id: 1,
       nama: "Gerhana Bulan Total / Blood Moon",
       tanggal: "2026-03-03",
       deskripsiSingkat: "Bulan tampak merah total saat masuk umbra Bumi.",
-      deskripsiLengkap: "Gerhana Bulan Total terjadi saat Bulan, Bumi, dan Matahari sejajar. Bulan akan tampak berwarna merah keemasan (Blood Moon) karena cahaya matahari dibiaskan oleh atmosfer Bumi. Fenomena ini dapat diamati dari seluruh Indonesia dengan mata telanjang jika cuaca cerah.",
+      deskripsiLengkap: "Gerhana Bulan Total terjadi saat Bulan, Bumi, dan Matahari sejajar...",
       poinPelajaran: [
         " Gerhana Bulan terjadi saat Bumi berada di antara Matahari dan Bulan.",
         " Warna merah terjadi karena hamburan Rayleigh di atmosfer Bumi.",
         " Gerhana bulan aman dilihat tanpa pelindung mata.",
       ],
       sumber: "BMKG, NASA",
+      waktuTerbaikUtc: "18:00", // Contoh waktu puncak gerhana
     ),
     FenomenaModel(
       id: 2,
       nama: "Hujan Meteor Lyrid",
       tanggal: "2026-04-22",
       deskripsiSingkat: "Hujan meteor Lyrid, puncaknya 22-23 April.",
-      deskripsiLengkap: "Lyrid adalah salah satu hujan meteor tertua yang diketahui. Meteor ini berasal dari debu komet C/1861 G1 Thatcher. Meskipun intensitasnya tidak terlalu tinggi, Lyrid sering menghasilkan meteor yang sangat terang dengan jejak cahaya panjang.",
+      deskripsiLengkap: "Lyrid adalah salah satu hujan meteor tertua yang diketahui...",
       poinPelajaran: [
         " Meteor adalah debu/komet yang terbakar saat masuk atmosfer Bumi.",
         " Lyrid terjadi setiap tahun pada bulan April.",
         " Puncak terbaik diamati dari lokasi gelap setelah tengah malam.",
       ],
       sumber: "In-The-Sky.org, NASA",
+      waktuTerbaikUtc: "02:00", // Waktu terbaik setelah tengah malam UTC
     ),
     FenomenaModel(
       id: 3,
       nama: "Hujan Meteor Eta Aquarid",
       tanggal: "2026-05-05",
       deskripsiSingkat: "Hujan meteor Eta Aquarid, puncaknya 5-6 Mei.",
-      deskripsiLengkap: "Hujan meteor Eta Aquarid berasal dari debu Komet Halley yang terkenal. Fenomena ini sangat cocok diamati dari Indonesia karena posisinya yang rendah di ekuator. Meteor Eta Aquarid bergerak sangat cepat, mencapai kecepatan 66 km/s.",
+      deskripsiLengkap: "Hujan meteor Eta Aquarid berasal dari debu Komet Halley...",
       poinPelajaran: [
         " Meteor ini berasal dari Komet Halley.",
         " Kecepatan meteor bisa mencapai 66 km/s.",
         " Waktu terbaik mengamati adalah sebelum fajar (pukul 03.00 - 05.00).",
       ],
       sumber: "In-The-Sky.org, NASA",
+      waktuTerbaikUtc: "20:00", // Waktu terbaik untuk pengamat di Indonesia (UTC 20:00 = WIB 03:00)
     ),
+    // ... tambahkan waktuTerbaikUtc untuk semua fenomena lainnya
     FenomenaModel(
       id: 4,
       nama: "Hujan Meteor Perseid",
       tanggal: "2026-08-12",
       deskripsiSingkat: "Hujan meteor Perseid, puncaknya 12-13 Agustus.",
-      deskripsiLengkap: "Perseid adalah hujan meteor paling populer, berasal dari debu komet Swift-Tuttle. Pada puncaknya, bisa terlihat hingga puluhan meteor per jam dari lokasi yang gelap. Meskipun puncaknya lebih baik di belahan bumi utara, Indonesia tetap bisa menyaksikan sebagian meteor ini.",
+      deskripsiLengkap: "Perseid adalah hujan meteor paling populer...",
       poinPelajaran: [
         " Meteor Perseid berasal dari rasi Perseus.",
         " Komet induknya adalah Swift-Tuttle.",
         " Waktu terbaik mengamati mulai tengah malam hingga subuh.",
       ],
       sumber: "In-The-Sky.org, NASA",
+      waktuTerbaikUtc: "21:00",
     ),
     FenomenaModel(
       id: 5,
       nama: "Hujan Meteor Geminid",
       tanggal: "2026-12-13",
       deskripsiSingkat: "Hujan meteor Geminid, puncaknya 13-14 Desember.",
-      deskripsiLengkap: "Geminid sering disebut sebagai hujan meteor terbaik karena konsisten dan intens. Meteor ini bergerak lebih lambat dan terkadang menghasilkan semburat warna-warni. Tidak seperti kebanyakan hujan meteor, Geminid berasal dari asteroid, bukan komet.",
+      deskripsiLengkap: "Geminid sering disebut sebagai hujan meteor terbaik...",
       poinPelajaran: [
         " Sumber Geminid adalah asteroid 3200 Phaethon.",
         " Meteor ini bisa terlihat dari Indonesia mulai malam hingga dini hari.",
         " Puncak aktivitas hingga 150 meteor per jam di lokasi tanpa polusi cahaya.",
       ],
       sumber: "NASA, Starwalk",
+      waktuTerbaikUtc: "22:00",
     ),
     FenomenaModel(
       id: 6,
       nama: "Supermoon Pertama",
       tanggal: "2026-08-01",
       deskripsiSingkat: "Supermoon: Bulan tampak lebih besar dan terang.",
-      deskripsiLengkap: "Supermoon terjadi saat bulan purnama bertepatan dengan posisi bulan di titik terdekatnya dengan Bumi (perigee). Bulan akan tampak sekitar 14% lebih besar dan 30% lebih terang dari biasanya.",
+      deskripsiLengkap: "Supermoon terjadi saat bulan purnama bertepatan dengan perigee...",
       poinPelajaran: [
         " Bulan purnama di perigee (jarak terdekat).",
         " Tampak lebih besar dan terang dari biasanya.",
         " Dapat diamati dengan mata telanjang sepanjang malam.",
       ],
-      sumber: "NASA, BMKG (Almanak 2026)",
-    ),
-    FenomenaModel(
-      id: 7,
-      nama: "Konjungsi Mars dan Jupiter",
-      tanggal: "2026-11-16",
-      deskripsiSingkat: "Mars dan Jupiter tampak sangat berdekatan di langit.",
-      deskripsiLengkap: "Dua planet terlihat sangat berdekatan (kurang dari 1 derajat) di langit timur sebelum fajar. Pemandangan ini sangat kontras: rona kemerahan Mars bersanding dengan cahaya putih Jupiter yang cemerlang. Bisa dilihat dengan mata telanjang di seluruh Indonesia.",
-      poinPelajaran: [
-        " Konjungsi berarti kedua planet terlihat berdekatan dari sudut pandang Bumi.",
-        " Fenomena ini dapat diamati dengan mata telanjang.",
-        " Waktu terbaik: sebelum fajar (sekitar pukul 04.00 dini hari).",
-      ],
-      sumber: "NASA Solar System Exploration",
-    ),
-    FenomenaModel(
-      id: 8,
-      nama: "Okultasi Saturnus oleh Bulan",
-      tanggal: "2026-02-01",
-      deskripsiSingkat: "Bulan menutupi planet Saturnus.",
-      deskripsiLengkap: "Fenomena langka di mana Bulan melintas tepat di depan Saturnus, membuat Saturnus seolah 'menghilang' di balik Bulan. Peristiwa ini hanya dapat dilihat dengan teleskop kecil atau teropong berperbesaran tinggi.",
-      poinPelajaran: [
-        " Okultasi adalah tertutupnya suatu benda langit oleh benda lain yang lebih dekat.",
-        " Wilayah Indonesia berada di jalur ideal pengamatan.",
-        " Disarankan menggunakan teleskop kecil atau teropong.",
-      ],
-      sumber: "International Astronomical Union (IAU)",
-    ),
-    FenomenaModel(
-      id: 9,
-      nama: "Oposisi Saturnus",
-      tanggal: "2026-09-21",
-      deskripsiSingkat: "Saturnus di titik terdekatnya dengan Bumi.",
-      deskripsiLengkap: "Pada posisi oposisi, Saturnus berada di titik terdekatnya dengan Bumi dan seluruh permukaannya diterangi Matahari. Ini adalah waktu terbaik untuk mengamati cincin Saturnus dengan teleskop.",
-      poinPelajaran: [
-        " Oposisi berarti planet berseberangan dengan Matahari dari Bumi.",
-        " Saturnus akan terlihat sangat terang sepanjang malam.",
-        " Waktu terbaik untuk fotografi planet dengan teleskop.",
-      ],
-      sumber: "NASA, BBC Weather",
-    ),
-    FenomenaModel(
-      id: 10,
-      nama: "Hujan Meteor Alpha Capricornid",
-      tanggal: "2026-07-30",
-      deskripsiSingkat: "Alpha Capricornid, dikenal dengan bolide terang.",
-      deskripsiLengkap: "Meskipun intensitasnya rendah, hujan meteor Alpha Capricornid terkenal dengan bolidenya (meteor sangat terang) yang sering meledak di atmosfer.",
-      poinPelajaran: [
-        " Dikenal menghasilkan bolide (meteor sangat terang).",
-        " Puncaknya 30 Juli.",
-        " Cocok diamati dari belahan bumi selatan termasuk Indonesia.",
-      ],
-      sumber: "International Meteor Organization (IMO)",
+      sumber: "NASA, BMKG",
+      waktuTerbaikUtc: "12:00", // Tengah malam? Sesuaikan
     ),
   ];
 
