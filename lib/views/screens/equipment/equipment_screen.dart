@@ -76,12 +76,22 @@ class _EquipmentScreenState extends State<EquipmentScreen> {
   }
 
   String _formatPrice(double usdPrice) {
-    if (_selectedCurrency == 'USD') {
-      return '\$${usdPrice.toStringAsFixed(2)}';
-    } else {
-      final idrRate = _rates['IDR'] ?? 15800;
-      final idrPrice = usdPrice * idrRate;
-      return 'Rp ${idrPrice.toStringAsFixed(0)}';
+    switch (_selectedCurrency) {
+      case 'USD':
+        return '\$${usdPrice.toStringAsFixed(2)}';
+
+      case 'IDR':
+        final rate = _rates['IDR'] ?? 15800;
+        final value = usdPrice * rate;
+        return 'Rp ${value.toStringAsFixed(0)}';
+
+      case 'EUR':
+        final rate = _rates['EUR'] ?? 0.92; // fallback aman
+        final value = usdPrice * rate;
+        return '€${value.toStringAsFixed(2)}';
+
+      default:
+        return '\$${usdPrice.toStringAsFixed(2)}';
     }
   }
 
@@ -97,11 +107,20 @@ class _EquipmentScreenState extends State<EquipmentScreen> {
             underline: const SizedBox(),
             icon: const Icon(Icons.attach_money, color: AppTheme.starlight),
             items: const [
-              DropdownMenuItem(value: 'IDR', child: Text('IDR', style: TextStyle(color: AppTheme.starlight))),
-              DropdownMenuItem(value: 'USD', child: Text('USD', style: TextStyle(color: AppTheme.starlight))),
+              DropdownMenuItem(
+                  value: 'IDR',
+                  child: Text('IDR', style: TextStyle(color: AppTheme.starlight))),
+              DropdownMenuItem(
+                  value: 'USD',
+                  child: Text('USD', style: TextStyle(color: AppTheme.starlight))),
+              DropdownMenuItem(
+                  value: 'EUR',
+                  child: Text('EUR', style: TextStyle(color: AppTheme.starlight))),
             ],
             onChanged: (value) {
-              if (value != null) setState(() => _selectedCurrency = value);
+              if (value != null) {
+                setState(() => _selectedCurrency = value);
+              }
             },
           ),
         ],
@@ -111,11 +130,12 @@ class _EquipmentScreenState extends State<EquipmentScreen> {
             ? const Center(child: CircularProgressIndicator())
             : GridView.builder(
                 padding: const EdgeInsets.all(12),
-                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                gridDelegate:
+                    const SliverGridDelegateWithFixedCrossAxisCount(
                   crossAxisCount: 2,
                   crossAxisSpacing: 12,
                   mainAxisSpacing: 12,
-                  childAspectRatio: 0.79, // Diubah dari 0.7 menjadi 0.75 (grid lebih pendek, space lebih sedikit)
+                  childAspectRatio: 0.79,
                 ),
                 itemCount: _equipments.length,
                 itemBuilder: (context, index) {
@@ -131,14 +151,15 @@ class _EquipmentScreenState extends State<EquipmentScreen> {
                       children: [
                         // Gambar
                         ClipRRect(
-                          borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+                          borderRadius: const BorderRadius.vertical(
+                              top: Radius.circular(16)),
                           child: Image.asset(
                             item['image'],
-                            height: 115, // Dinaikkan sedikit biar gambar proporsional
+                            height: 115,
                             width: double.infinity,
                             fit: BoxFit.cover,
                             errorBuilder: (_, __, ___) => Container(
-                              height: 110,
+                              height: 115,
                               color: AppTheme.deepSpace,
                               child: Center(
                                 child: Text(
@@ -149,17 +170,19 @@ class _EquipmentScreenState extends State<EquipmentScreen> {
                             ),
                           ),
                         ),
-                        // Konten teks (tanpa Expanded atau Spacer)
+
+                        // Konten
                         Padding(
                           padding: const EdgeInsets.all(10),
                           child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
+                            crossAxisAlignment:
+                                CrossAxisAlignment.start,
                             children: [
                               Text(
                                 item['name'],
                                 style: const TextStyle(
                                   color: AppTheme.starlight,
-                                  fontSize: 14, // Diperbesar dari 13
+                                  fontSize: 14,
                                   fontWeight: FontWeight.bold,
                                 ),
                                 maxLines: 2,
@@ -170,7 +193,7 @@ class _EquipmentScreenState extends State<EquipmentScreen> {
                                 item['description'],
                                 style: const TextStyle(
                                   color: Color(0xFF9CA3AF),
-                                  fontSize: 11, // Diperbesar dari 10
+                                  fontSize: 11,
                                 ),
                                 maxLines: 2,
                                 overflow: TextOverflow.ellipsis,
@@ -180,7 +203,7 @@ class _EquipmentScreenState extends State<EquipmentScreen> {
                                 _formatPrice(item['price_usd']),
                                 style: const TextStyle(
                                   color: AppTheme.solarGold,
-                                  fontSize: 14, // Diperbesar dari 12
+                                  fontSize: 14,
                                   fontWeight: FontWeight.w700,
                                 ),
                               ),
