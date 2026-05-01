@@ -392,7 +392,7 @@ class _HomeScreenState extends State<HomeScreen> {
       physics: const NeverScrollableScrollPhysics(),
       mainAxisSpacing: 16,
       crossAxisSpacing: 16,
-      childAspectRatio: 1.2,
+      childAspectRatio: 0.8,
       children: menus.map((m) {
         final color = m['color'] as Color;
         return GestureDetector(
@@ -431,8 +431,8 @@ class _HomeScreenState extends State<HomeScreen> {
                 children: [
                   Image.asset(
                     m['image'] as String,
-                    width: 39,
-                    height: 39,
+                    width: 42,
+                    height: 42,
                     // Hapus color agar gambar tetap warna asli
                   ),
                   const SizedBox(height: 8),
