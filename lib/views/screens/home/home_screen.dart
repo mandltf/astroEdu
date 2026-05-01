@@ -430,8 +430,8 @@ class _HomeScreenState extends State<HomeScreen> {
                 children: [
                   Image.asset(
                     m['image'] as String,
-                    width: 36,
-                    height: 36,
+                    width: 39,
+                    height: 39,
                     // Hapus color agar gambar tetap warna asli
                   ),
                   const SizedBox(height: 8),
