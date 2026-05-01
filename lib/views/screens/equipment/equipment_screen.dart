@@ -18,37 +18,42 @@ class _EquipmentScreenState extends State<EquipmentScreen> {
       'description': 'Cocok untuk pemula, melihat bulan, planet terang, dan gugus bintang.',
       'price_usd': 89.99,
       'icon': '🔭',
-      'image': 'https://example.com/telescope.png', // placeholder, nanti pakai asset lokal
+      'image': 'assets/images/teropong70mm.jpg', // placeholder, nanti pakai asset lokal
     },
     {
       'name': 'Teleskop 130EQ',
       'description': 'Dilengkapi mount equatorial, mampu melihat galaksi dan nebula.',
       'price_usd': 299.99,
       'icon': '🪐',
+      'image': 'assets/images/teropong130eq.jpg',
     },
     {
       'name': 'Binokular 10x50',
       'description': 'Ringan dan portabel, ideal untuk pemandangan langit luas.',
       'price_usd': 79.99,
       'icon': '👓',
+      'image': 'assets/images/binokular10x50.jpg',
     },
     {
       'name': 'Filter Bulan',
       'description': 'Mengurangi silau bulan purnama agar detail kawah terlihat.',
       'price_usd': 24.99,
       'icon': '🌙',
+      'image': 'assets/images/filterbulan.jpg',
     },
     {
       'name': 'Buku Panduan Astronomi',
       'description': 'Referensi lengkap untuk memahami langit malam.',
       'price_usd': 19.99,
       'icon': '📖',
+      'image': 'assets/images/bukupanduanastronomi.jpg',
     },
     {
       'name': 'Laser Pointer Astronomi',
       'description': 'Memudahkan menunjuk bintang saat berbagi dengan teman.',
       'price_usd': 34.99,
       'icon': '🔦',
+      'image': 'assets/images/laserpointer.jpg',
     },
   ];
 
@@ -132,11 +137,12 @@ class _EquipmentScreenState extends State<EquipmentScreen> {
                             borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
                             color: AppTheme.deepSpace,
                           ),
-                          child: Center(
-                            child: Text(
-                              item['icon'],
-                              style: const TextStyle(fontSize: 48),
-                            ),
+                          child: Image.asset(
+                            item['image'],
+                            fit: BoxFit.cover,
+                            width: double.infinity,
+                            height: 100,
+                            errorBuilder: (_, __, ___) => Text(item['icon'], style: const TextStyle(fontSize: 48)),
                           ),
                         ),
                         Padding(
