@@ -1,6 +1,6 @@
-// lib/views/screens/game/catch_star_game.dart
 import 'dart:async';
 import 'dart:math';
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:sensors_plus/sensors_plus.dart';
 import '../../../utils/app_theme.dart';
@@ -17,9 +17,10 @@ class CatchStarGame extends StatefulWidget {
 class _CatchStarGameState extends State<CatchStarGame> {
   late double _screenWidth;
   late double _screenHeight;
-  static const double _blackHoleSize = 90.0;
+
+  static const double _blackHoleSize = 140.0; // 🔥 lebih besar
   static const double _starSize = 32.0;
-  static const double _speedFactor = 0.9;
+  static const double _speedFactor = 1.2;
   static const int _winScore = 10;
 
   double _blackHoleX = 0.5;
@@ -40,75 +41,44 @@ class _CatchStarGameState extends State<CatchStarGame> {
 
   final Random _random = Random();
 
-  final String _blackHoleFact =
-      "🕳️ Lubang hitam memiliki gravitasi sangat kuat sehingga "
-      "bintang pun bisa 'dimakan'! Ketika bintang terlalu dekat, "
-      "materialnya tersedot dan menghasilkan semburan energi dahsyat. "
-      "Sekarang, kamu jadi lubang hitam. Miringkan HP untuk menangkap bintang jatuh!";
+  double _filteredTilt = 0; // 🔥 smoothing sensor
 
-  @override
-  void initState() {
-    super.initState();
-    // Jangan panggil dialog di initState
-  }
+  final String _blackHoleFact =
+      "🕳️ Lubang hitam bisa 'memakan' bintang! Sekarang kamu jadi black hole—tangkap bintang jatuh!";
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    // Cek apakah halaman ini sedang aktif (visible)
-    if (mounted && !_dialogShown && !_isGameStarted && ModalRoute.of(context)?.isCurrent == true) {
+
+    if (mounted &&
+        !_dialogShown &&
+        !_isGameStarted &&
+        ModalRoute.of(context)?.isCurrent == true) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted && !_dialogShown && ModalRoute.of(context)?.isCurrent == true) {
-          _showStartDialog();
-        }
+        _showStartDialog();
       });
     }
   }
 
   Future<void> _showStartDialog() async {
     _dialogShown = true;
+
     await showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (context) => AlertDialog(
+      builder: (_) => AlertDialog(
         backgroundColor: AppTheme.cardBg,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-        title: const Row(
-          children: [
-            Icon(Icons.opacity, color: AppTheme.solarGold, size: 32),
-            SizedBox(width: 12),
-            Text('BLACK HOLE GAME', style: TextStyle(color: AppTheme.starlight, fontWeight: FontWeight.bold)),
-          ],
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              '⚡ Fakta Menarik:',
-              style: TextStyle(color: AppTheme.auroraBlue, fontWeight: FontWeight.w600, fontSize: 14),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              _blackHoleFact,
-              style: const TextStyle(color: Color(0xFFD1D5DB), fontSize: 13, height: 1.4),
-            ),
-            const SizedBox(height: 16),
-            const Divider(color: AppTheme.cardBorder),
-            const SizedBox(height: 8),
-            Text(
-              '🎮 Cara Main:\nMiringkan HP ke KANAN untuk gerak ke kanan, ke KIRI untuk gerak ke kiri.\nSemakin miring, semakin cepat geraknya!\nTangkap $_winScore bintang untuk MENANG!',
-              style: const TextStyle(color: Color(0xFF9CA3AF), fontSize: 12),
-            ),
-          ],
-        ),
+        shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(24)),
+        title: const Text('🕳️ BLACK HOLE GAME'),
+        content: Text(_blackHoleFact),
         actions: [
           TextButton(
             onPressed: () {
               Navigator.pop(context);
               _startGame();
             },
-            child: const Text('MULAI GAME', style: TextStyle(color: AppTheme.auroraBlue, fontWeight: FontWeight.bold)),
+            child: const Text('MULAI'),
           ),
         ],
       ),
@@ -118,7 +88,7 @@ class _CatchStarGameState extends State<CatchStarGame> {
   void _startGame() {
     _screenWidth = MediaQuery.of(context).size.width;
     _screenHeight = MediaQuery.of(context).size.height;
-    
+
     setState(() {
       _isGameStarted = true;
       _isGameOver = false;
@@ -127,9 +97,8 @@ class _CatchStarGameState extends State<CatchStarGame> {
       _lives = 5;
       _stars.clear();
       _blackHoleX = 0.5;
-      _actualLeft = _blackHoleX * (_screenWidth - _blackHoleSize);
     });
-    
+
     _startSensors();
     _startGameLoop();
   }
@@ -138,32 +107,30 @@ class _CatchStarGameState extends State<CatchStarGame> {
     _accelerometerSub?.cancel();
 
     _accelerometerSub = accelerometerEvents.listen((event) {
-      if (_isGameOver || _isWin || !mounted) return;
+      if (_isGameOver || _isWin) return;
 
-      // 1. BALIK ARAH (biar kanan = kanan)
-      double tilt = -event.x / 9.8;
+      // 🔥 balik arah + normalize
+      double rawTilt = -event.x / 9.8;
 
-      // 2. LIMIT biar gak over
-      tilt = tilt.clamp(-1.0, 1.0);
+      // 🔥 low pass filter (biar smooth)
+      _filteredTilt = (_filteredTilt * 0.8) + (rawTilt * 0.2);
 
-      // 3. DEADZONE (biar gak goyang dikit langsung gerak)
-      if (tilt.abs() < 0.05) tilt = 0;
+      // deadzone
+      if (_filteredTilt.abs() < 0.03) return;
 
-      // 4. NON-LINEAR (makin miring makin ngebut)
-      double speed = tilt * tilt * _speedFactor * tilt.sign;
+      // non-linear speed
+      double speed =
+          _filteredTilt * _filteredTilt * _speedFactor * _filteredTilt.sign;
 
-      // 5. BOOST biar lebih responsif
-      speed *= 1.5;
-
-      // 6. UPDATE POSISI
       double newX = (_blackHoleX + speed).clamp(0.0, 1.0);
 
+      // 🔥 LERP smoothing
+      _blackHoleX = lerpDouble(_blackHoleX, newX, 0.25)!;
+
       setState(() {
-        _blackHoleX = newX;
-        _actualLeft = _blackHoleX * (_screenWidth - _blackHoleSize);
+        _actualLeft =
+            _blackHoleX * (_screenWidth - _blackHoleSize);
       });
-    }, onError: (error) {
-      print('Sensor error: $error');
     });
   }
 
@@ -171,65 +138,69 @@ class _CatchStarGameState extends State<CatchStarGame> {
     _spawnTimer?.cancel();
     _moveTimer?.cancel();
 
-    _spawnTimer = Timer.periodic(const Duration(milliseconds: 800), (timer) {
-      if (!_isGameOver && !_isWin && mounted) {
+    _spawnTimer =
+        Timer.periodic(const Duration(milliseconds: 700), (_) {
+      if (!_isGameOver && !_isWin) {
         setState(() {
           _stars.add(Star(
             x: _random.nextDouble(),
-            y: 0.0,
-            speed: 0.004 + _random.nextDouble() * 0.01,
+            y: 0,
+            speed: 0.006 + _random.nextDouble() * 0.01,
           ));
         });
       }
     });
 
-    _moveTimer = Timer.periodic(const Duration(milliseconds: 30), (timer) {
-      if (!_isGameOver && !_isWin && mounted) {
-        setState(() {
-          _updateStars();
-        });
+    _moveTimer =
+        Timer.periodic(const Duration(milliseconds: 16), (_) {
+      if (!_isGameOver && !_isWin) {
+        setState(() => _updateStars());
       }
     });
   }
 
   void _updateStars() {
     List<Star> remaining = [];
+
     for (var star in _stars) {
       star.y += star.speed;
 
       double starLeft = star.x * (_screenWidth - _starSize);
       double starTop = star.y * (_screenHeight - _starSize);
+
       double blackLeft = _actualLeft;
       double blackTop = _screenHeight - _blackHoleSize - 20;
-      double blackRight = blackLeft + _blackHoleSize;
-      double starRight = starLeft + _starSize;
 
-      bool isColliding = (starRight > blackLeft && 
-                          starLeft < blackRight && 
-                          starTop + _starSize > blackTop && 
-                          starTop < blackTop + _blackHoleSize);
+      bool hit =
+          (starLeft < blackLeft + _blackHoleSize &&
+              starLeft + _starSize > blackLeft &&
+              starTop < blackTop + _blackHoleSize &&
+              starTop + _starSize > blackTop);
 
-      if (isColliding) {
+      if (hit) {
         _score++;
-        
+
         if (_score >= _winScore) {
           _isWin = true;
           _stopGame();
-          if (mounted) _showWinDialog();
+          _showEndDialog(true);
         }
         continue;
       }
-      else if (star.y >= 1.0) {
+
+      if (star.y >= 1.0) {
         _lives--;
         if (_lives <= 0) {
           _isGameOver = true;
           _stopGame();
-          if (mounted) _showGameOverDialog();
+          _showEndDialog(false);
         }
         continue;
       }
+
       remaining.add(star);
     }
+
     _stars = remaining;
   }
 
@@ -239,75 +210,25 @@ class _CatchStarGameState extends State<CatchStarGame> {
     _accelerometerSub?.cancel();
   }
 
-  void _showWinDialog() {
+  void _showEndDialog(bool win) {
     showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (context) => AlertDialog(
-        backgroundColor: AppTheme.cardBg,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: const Row(
-          children: [
-            Icon(Icons.emoji_events, color: AppTheme.solarGold, size: 32),
-            SizedBox(width: 8),
-            Text('🌟 YOU WIN! 🌟', style: TextStyle(color: AppTheme.solarGold, fontWeight: FontWeight.bold)),
-          ],
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Text(
-              'Selamat! Lubang hitam berhasil menangkap semua bintang!',
-              style: TextStyle(color: AppTheme.starlight),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 16),
-            Text(
-              'Skor akhir: $_score\nBintang tertangkap: $_score',
-              style: const TextStyle(color: Color(0xFF9CA3AF)),
-            ),
-          ],
-        ),
-        actions: [
-          ElevatedButton(
-            onPressed: () {
-              Navigator.pop(context);
-              _resetAndStart();
-            },
-            child: const Text('Main Lagi'),
-          ),
-          TextButton(
-            onPressed: () {
-              Navigator.pop(context);
-              Navigator.pop(context);
-            },
-            child: const Text('Kembali', style: TextStyle(color: AppTheme.auroraBlue)),
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _showGameOverDialog() {
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (context) => AlertDialog(
-        backgroundColor: AppTheme.cardBg,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: const Text('💀 GAME OVER', style: TextStyle(color: AppTheme.marsRed, fontWeight: FontWeight.bold)),
-        content: Text('Skor akhir: $_score\nBintang yang tertangkap: $_score', style: const TextStyle(color: AppTheme.starlight)),
+      builder: (_) => AlertDialog(
+        title: Text(win ? '🌟 MENANG!' : '💀 GAME OVER'),
+        content: Text('Skor: $_score'),
         actions: [
           TextButton(
             onPressed: () {
               Navigator.pop(context);
+              _resetToStart(); // 🔥 balik ke dialog awal
             },
-            child: const Text('Kembali', style: TextStyle(color: AppTheme.auroraBlue)),
+            child: const Text('Kembali'),
           ),
           ElevatedButton(
             onPressed: () {
               Navigator.pop(context);
-              _resetAndStart();
+              _startGame();
             },
             child: const Text('Main Lagi'),
           ),
@@ -316,23 +237,15 @@ class _CatchStarGameState extends State<CatchStarGame> {
     );
   }
 
-  void _resetAndStart() {
-    _stopGame();
-    _screenWidth = MediaQuery.of(context).size.width;
-    _screenHeight = MediaQuery.of(context).size.height;
-    
+  void _resetToStart() {
     setState(() {
-      _stars.clear();
-      _score = 0;
-      _lives = 5;
-      _isGameOver = false;
-      _isWin = false;
-      _isGameStarted = true;
-      _blackHoleX = 0.5;
-      _actualLeft = _blackHoleX * (_screenWidth - _blackHoleSize);
+      _isGameStarted = false;
+      _dialogShown = false;
     });
-    _startSensors();
-    _startGameLoop();
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _showStartDialog();
+    });
   }
 
   @override
@@ -345,128 +258,27 @@ class _CatchStarGameState extends State<CatchStarGame> {
   Widget build(BuildContext context) {
     _screenWidth = MediaQuery.of(context).size.width;
     _screenHeight = MediaQuery.of(context).size.height;
-    
-    if (_actualLeft == 0 && _blackHoleX != 0) {
-      _actualLeft = _blackHoleX * (_screenWidth - _blackHoleSize);
-    }
 
-    // Loading sebelum game dimulai
     if (!_isGameStarted) {
       return Scaffold(
         appBar: AstroAppBar(title: '🎮 Black Hole Game'),
-        body: StarBackground(
-          child: const Center(
-            child: CircularProgressIndicator(),
-          ),
-        ),
+        body: const Center(child: CircularProgressIndicator()),
       );
     }
 
-    // Tampilan menang
-    if (_isWin) {
-      return Scaffold(
-        appBar: AstroAppBar(title: '🎮 Black Hole Game'),
-        body: StarBackground(
-          child: Center(
-            child: Container(
-              padding: const EdgeInsets.all(24),
-              margin: const EdgeInsets.symmetric(horizontal: 32),
-              decoration: BoxDecoration(
-                color: AppTheme.cardBg,
-                borderRadius: BorderRadius.circular(20),
-                border: Border.all(color: AppTheme.solarGold),
-              ),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const Icon(Icons.emoji_events, color: AppTheme.solarGold, size: 64),
-                  const SizedBox(height: 16),
-                  const Text(
-                    '🌟 YOU WIN! 🌟',
-                    style: TextStyle(color: AppTheme.solarGold, fontSize: 24, fontWeight: FontWeight.bold),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    'Skor akhir: $_score',
-                    style: const TextStyle(color: AppTheme.starlight, fontSize: 18),
-                  ),
-                  const SizedBox(height: 24),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                    children: [
-                      ElevatedButton(
-                        onPressed: () => Navigator.pop(context),
-                        child: const Text('Kembali'),
-                      ),
-                      ElevatedButton(
-                        onPressed: _resetAndStart,
-                        style: ElevatedButton.styleFrom(backgroundColor: AppTheme.auroraBlue),
-                        child: const Text('Main Lagi'),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ),
-      );
-    }
-
-    // Tampilan game aktif
     return Scaffold(
-      appBar: AstroAppBar(title: ' Black Hole Game'),
+      appBar: AstroAppBar(title: '🎮 Black Hole Game'),
       body: StarBackground(
         child: Stack(
           children: [
-            // Skor
-            Positioned(
-              top: 20,
-              left: 16,
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                decoration: BoxDecoration(
-                  color: AppTheme.cardBg,
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: Text('⭐ Skor: $_score / $_winScore', style: const TextStyle(color: AppTheme.solarGold, fontSize: 16)),
-              ),
-            ),
-            // Nyawa
-            Positioned(
-              top: 20,
-              right: 16,
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                decoration: BoxDecoration(
-                  color: AppTheme.cardBg,
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: Row(
-                  children: List.generate(_lives, (index) => const Icon(Icons.favorite, color: AppTheme.marsRed, size: 18)),
-                ),
-              ),
-            ),
-            // Progress bar
-            Positioned(
-              top: 60,
-              left: 16,
-              right: 16,
-              child: LinearProgressIndicator(
-                value: _score / _winScore,
-                backgroundColor: AppTheme.cardBorder,
-                valueColor: const AlwaysStoppedAnimation<Color>(AppTheme.solarGold),
-                borderRadius: BorderRadius.circular(4),
-              ),
-            ),
-            // Bintang jatuh
             for (var star in _stars)
               Positioned(
                 left: star.x * (_screenWidth - _starSize),
                 top: star.y * (_screenHeight - _starSize),
-                child: const Icon(Icons.star, color: AppTheme.solarGold, size: _starSize),
+                child: const Icon(Icons.star,
+                    color: AppTheme.solarGold, size: _starSize),
               ),
-            // Black hole
+
             Positioned(
               left: _actualLeft,
               bottom: 20,
@@ -474,40 +286,6 @@ class _CatchStarGameState extends State<CatchStarGame> {
                 'assets/images/blackhole.png',
                 width: _blackHoleSize,
                 height: _blackHoleSize,
-                errorBuilder: (context, error, stackTrace) {
-                  return Container(
-                    width: _blackHoleSize,
-                    height: _blackHoleSize,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      gradient: const RadialGradient(
-                        colors: [Colors.black, AppTheme.cosmicPurple],
-                        center: Alignment.center,
-                        radius: 0.8,
-                      ),
-                    ),
-                    child: const Center(child: Icon(Icons.circle, color: Colors.white24, size: 40)),
-                  );
-                },
-              ),
-            ),
-            // Petunjuk
-            Positioned(
-              bottom: _blackHoleSize + 30,
-              left: 0,
-              right: 0,
-              child: Center(
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: AppTheme.deepSpace.withOpacity(0.8),
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: const Text(
-                    'Miringkan HP ke KANAN / KIRI | Target: 10 bintang',
-                    style: TextStyle(color: Colors.white70, fontSize: 10),
-                  ),
-                ),
               ),
             ),
           ],
@@ -521,5 +299,6 @@ class Star {
   double x;
   double y;
   double speed;
+
   Star({required this.x, required this.y, required this.speed});
 }
