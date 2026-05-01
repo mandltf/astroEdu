@@ -18,9 +18,9 @@ class _CatchStarGameState extends State<CatchStarGame> {
   late double _screenWidth;
   late double _screenHeight;
 
-  static const double _blackHoleSize = 140.0; // 🔥 lebih besar
+  static const double _blackHoleSize = 130.0; // 🔥 lebih besar
   static const double _starSize = 32.0;
-  static const double _speedFactor = 1.2;
+  static const double _speedFactor = 1.4; // 🔥 lebih responsif
   static const int _winScore = 10;
 
   double _blackHoleX = 0.5;
@@ -30,10 +30,11 @@ class _CatchStarGameState extends State<CatchStarGame> {
 
   int _score = 0;
   int _lives = 5;
-  bool _isGameOver = false;
-  bool _isWin = false;
+
   bool _isGameStarted = false;
   bool _dialogShown = false;
+  bool _isGameOver = false;
+  bool _isWin = false;
 
   Timer? _spawnTimer;
   Timer? _moveTimer;
@@ -41,19 +42,16 @@ class _CatchStarGameState extends State<CatchStarGame> {
 
   final Random _random = Random();
 
-  double _filteredTilt = 0; // 🔥 smoothing sensor
+  double _filteredTilt = 0;
 
-  final String _blackHoleFact =
-      "🕳️ Lubang hitam bisa 'memakan' bintang! Sekarang kamu jadi black hole—tangkap bintang jatuh!";
+  final String _fact =
+      "🕳️ Kamu adalah black hole! Tangkap bintang jatuh dengan memiringkan HP.";
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
 
-    if (mounted &&
-        !_dialogShown &&
-        !_isGameStarted &&
-        ModalRoute.of(context)?.isCurrent == true) {
+    if (!_dialogShown && !_isGameStarted) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         _showStartDialog();
       });
@@ -66,12 +64,13 @@ class _CatchStarGameState extends State<CatchStarGame> {
     await showDialog(
       context: context,
       barrierDismissible: false,
+      useRootNavigator: false, // 🔥 BIAR NAVBAR TETAP HIDUP
       builder: (_) => AlertDialog(
         backgroundColor: AppTheme.cardBg,
         shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(24)),
         title: const Text('🕳️ BLACK HOLE GAME'),
-        content: Text(_blackHoleFact),
+        content: Text(_fact),
         actions: [
           TextButton(
             onPressed: () {
@@ -97,6 +96,7 @@ class _CatchStarGameState extends State<CatchStarGame> {
       _lives = 5;
       _stars.clear();
       _blackHoleX = 0.5;
+      _actualLeft = _blackHoleX * (_screenWidth - _blackHoleSize);
     });
 
     _startSensors();
@@ -109,23 +109,22 @@ class _CatchStarGameState extends State<CatchStarGame> {
     _accelerometerSub = accelerometerEvents.listen((event) {
       if (_isGameOver || _isWin) return;
 
-      // 🔥 balik arah + normalize
       double rawTilt = -event.x / 9.8;
 
-      // 🔥 low pass filter (biar smooth)
-      _filteredTilt = (_filteredTilt * 0.8) + (rawTilt * 0.2);
+      // 🔥 smoothing ringan (biar gak delay)
+      _filteredTilt = (_filteredTilt * 0.7) + (rawTilt * 0.3);
 
-      // deadzone
-      if (_filteredTilt.abs() < 0.03) return;
+      if (_filteredTilt.abs() < 0.02) return;
 
-      // non-linear speed
       double speed =
           _filteredTilt * _filteredTilt * _speedFactor * _filteredTilt.sign;
 
+      speed *= 1.3; // 🔥 boost biar gak lemot
+
       double newX = (_blackHoleX + speed).clamp(0.0, 1.0);
 
-      // 🔥 LERP smoothing
-      _blackHoleX = lerpDouble(_blackHoleX, newX, 0.25)!;
+      // 🔥 smoothing ringan (biar smooth tapi responsif)
+      _blackHoleX = lerpDouble(_blackHoleX, newX, 0.4)!;
 
       setState(() {
         _actualLeft =
@@ -139,13 +138,13 @@ class _CatchStarGameState extends State<CatchStarGame> {
     _moveTimer?.cancel();
 
     _spawnTimer =
-        Timer.periodic(const Duration(milliseconds: 700), (_) {
+        Timer.periodic(const Duration(milliseconds: 650), (_) {
       if (!_isGameOver && !_isWin) {
         setState(() {
           _stars.add(Star(
             x: _random.nextDouble(),
             y: 0,
-            speed: 0.006 + _random.nextDouble() * 0.01,
+            speed: 0.007 + _random.nextDouble() * 0.01,
           ));
         });
       }
@@ -214,6 +213,7 @@ class _CatchStarGameState extends State<CatchStarGame> {
     showDialog(
       context: context,
       barrierDismissible: false,
+      useRootNavigator: false, // 🔥 navbar tetap aktif
       builder: (_) => AlertDialog(
         title: Text(win ? '🌟 MENANG!' : '💀 GAME OVER'),
         content: Text('Skor: $_score'),
