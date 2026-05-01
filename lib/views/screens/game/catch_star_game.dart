@@ -19,7 +19,8 @@ class _CatchStarGameState extends State<CatchStarGame> {
   late double _screenHeight;
   static const double _blackHoleSize = 90.0;
   static const double _starSize = 32.0;
-  static const double _speedFactor = 0.25; // Semakin besar, semakin cepat respon
+  static const double _speedFactor = 0.28;
+  static const int _winScore = 20; // Skor untuk menang (30 bintang)
 
   double _blackHoleX = 0.5;
   double _actualLeft = 0.0;
@@ -29,7 +30,9 @@ class _CatchStarGameState extends State<CatchStarGame> {
   int _score = 0;
   int _lives = 5;
   bool _isGameOver = false;
+  bool _isWin = false;        // Status kemenangan
   bool _isGameStarted = false;
+  bool _dialogShown = false;
 
   Timer? _spawnTimer;
   Timer? _moveTimer;
@@ -47,13 +50,14 @@ class _CatchStarGameState extends State<CatchStarGame> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) {
+      if (mounted && !_dialogShown) {
         _showStartDialog();
       }
     });
   }
 
   Future<void> _showStartDialog() async {
+    _dialogShown = true;
     await showDialog(
       context: context,
       barrierDismissible: false,
@@ -83,9 +87,9 @@ class _CatchStarGameState extends State<CatchStarGame> {
             const SizedBox(height: 16),
             const Divider(color: AppTheme.cardBorder),
             const SizedBox(height: 8),
-            const Text(
-              '🎮 Cara Main:\nMiringkan HP ke kiri/kanan untuk menggerakkan lubang hitam.\nSemakin miring, semakin cepat geraknya!\nTangkap bintang jatuh sebelum menyentuh tanah!',
-              style: TextStyle(color: Color(0xFF9CA3AF), fontSize: 12),
+            Text(
+              '🎮 Cara Main:\nMiringkan HP ke KANAN untuk gerak ke kanan, ke KIRI untuk gerak ke kiri.\nSemakin miring, semakin cepat geraknya!\nTangkap $_winScore bintang untuk MENANG!',
+              style: const TextStyle(color: Color(0xFF9CA3AF), fontSize: 12),
             ),
           ],
         ),
@@ -109,6 +113,7 @@ class _CatchStarGameState extends State<CatchStarGame> {
     setState(() {
       _isGameStarted = true;
       _isGameOver = false;
+      _isWin = false;
       _score = 0;
       _lives = 5;
       _stars.clear();
@@ -123,18 +128,12 @@ class _CatchStarGameState extends State<CatchStarGame> {
   void _startSensors() {
     _accelerometerSub?.cancel();
     _accelerometerSub = accelerometerEvents.listen((event) {
-      if (_isGameOver || !mounted) return;
+      if (_isGameOver || _isWin || !mounted) return;
       
-      // event.x: nilai -9.8 (miring kiri maks) sampai +9.8 (miring kanan maks)
-      // Normalisasi ke -1..1
       double tilt = event.x / 9.8;
       tilt = tilt.clamp(-1.0, 1.0);
       
-      // Kecepatan gerak = kemiringan × speedFactor
-      // Semakin besar kemiringan (mendekati ±1), semakin cepat gerak
       double speed = tilt * _speedFactor;
-      
-      // Update posisi blackhole
       double newX = (_blackHoleX + speed).clamp(0.0, 1.0);
       
       setState(() {
@@ -151,7 +150,7 @@ class _CatchStarGameState extends State<CatchStarGame> {
     _moveTimer?.cancel();
 
     _spawnTimer = Timer.periodic(const Duration(milliseconds: 800), (timer) {
-      if (!_isGameOver && mounted) {
+      if (!_isGameOver && !_isWin && mounted) {
         setState(() {
           _stars.add(Star(
             x: _random.nextDouble(),
@@ -163,7 +162,7 @@ class _CatchStarGameState extends State<CatchStarGame> {
     });
 
     _moveTimer = Timer.periodic(const Duration(milliseconds: 30), (timer) {
-      if (!_isGameOver && mounted) {
+      if (!_isGameOver && !_isWin && mounted) {
         setState(() {
           _updateStars();
         });
@@ -190,6 +189,13 @@ class _CatchStarGameState extends State<CatchStarGame> {
 
       if (isColliding) {
         _score++;
+        
+        // Cek apakah sudah menang
+        if (_score >= _winScore) {
+          _isWin = true;
+          _stopGame();
+          if (mounted) _showWinDialog();
+        }
         continue;
       }
       else if (star.y >= 1.0) {
@@ -210,6 +216,48 @@ class _CatchStarGameState extends State<CatchStarGame> {
     _spawnTimer?.cancel();
     _moveTimer?.cancel();
     _accelerometerSub?.cancel();
+  }
+
+  void _showWinDialog() {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => AlertDialog(
+        backgroundColor: AppTheme.cardBg,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: const Row(
+          children: [
+            Icon(Icons.emoji_events, color: AppTheme.solarGold, size: 32),
+            SizedBox(width: 8),
+            Text('🌟 YOU WIN! 🌟', style: TextStyle(color: AppTheme.solarGold, fontWeight: FontWeight.bold)),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text(
+              'Selamat! Lubang hitam berhasil menangkap semua bintang!',
+              style: TextStyle(color: AppTheme.starlight),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'Skor akhir: $_score\nBintang tertangkap: $_score',
+              style: const TextStyle(color: Color(0xFF9CA3AF)),
+            ),
+          ],
+        ),
+        actions: [
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(context);
+              _resetAndStart();
+            },
+            child: const Text('Main Lagi'),
+          ),
+        ],
+      ),
+    );
   }
 
   void _showGameOverDialog() {
@@ -251,6 +299,7 @@ class _CatchStarGameState extends State<CatchStarGame> {
       _score = 0;
       _lives = 5;
       _isGameOver = false;
+      _isWin = false;
       _isGameStarted = true;
       _blackHoleX = 0.5;
       _actualLeft = _blackHoleX * (_screenWidth - _blackHoleSize);
@@ -285,11 +334,63 @@ class _CatchStarGameState extends State<CatchStarGame> {
       );
     }
 
+    // Tampilkan overlay WIN jika sudah menang
+    if (_isWin) {
+      return Scaffold(
+        appBar: AstroAppBar(title: '🎮 Black Hole Game'),
+        body: StarBackground(
+          child: Center(
+            child: Container(
+              padding: const EdgeInsets.all(24),
+              margin: const EdgeInsets.symmetric(horizontal: 32),
+              decoration: BoxDecoration(
+                color: AppTheme.cardBg,
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(color: AppTheme.solarGold),
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(Icons.emoji_events, color: AppTheme.solarGold, size: 64),
+                  const SizedBox(height: 16),
+                  const Text(
+                    '🌟 YOU WIN! 🌟',
+                    style: TextStyle(color: AppTheme.solarGold, fontSize: 24, fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Skor akhir: $_score',
+                    style: const TextStyle(color: AppTheme.starlight, fontSize: 18),
+                  ),
+                  const SizedBox(height: 24),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: [
+                      ElevatedButton(
+                        onPressed: () => Navigator.pop(context),
+                        child: const Text('Kembali'),
+                      ),
+                      ElevatedButton(
+                        onPressed: _resetAndStart,
+                        style: ElevatedButton.styleFrom(backgroundColor: AppTheme.auroraBlue),
+                        child: const Text('Main Lagi'),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      );
+    }
+
     return Scaffold(
       appBar: AstroAppBar(title: '🎮 Black Hole Game'),
       body: StarBackground(
         child: Stack(
           children: [
+            // Skor
             Positioned(
               top: 20,
               left: 16,
@@ -299,9 +400,10 @@ class _CatchStarGameState extends State<CatchStarGame> {
                   color: AppTheme.cardBg,
                   borderRadius: BorderRadius.circular(20),
                 ),
-                child: Text('⭐ Skor: $_score', style: const TextStyle(color: AppTheme.solarGold, fontSize: 16)),
+                child: Text('⭐ Skor: $_score / $_winScore', style: const TextStyle(color: AppTheme.solarGold, fontSize: 16)),
               ),
             ),
+            // Nyawa
             Positioned(
               top: 20,
               right: 16,
@@ -316,12 +418,26 @@ class _CatchStarGameState extends State<CatchStarGame> {
                 ),
               ),
             ),
+            // Progress bar menuju kemenangan
+            Positioned(
+              top: 60,
+              left: 16,
+              right: 16,
+              child: LinearProgressIndicator(
+                value: _score / _winScore,
+                backgroundColor: AppTheme.cardBorder,
+                valueColor: const AlwaysStoppedAnimation<Color>(AppTheme.solarGold),
+                borderRadius: BorderRadius.circular(4),
+              ),
+            ),
+            // Bintang jatuh
             for (var star in _stars)
               Positioned(
                 left: star.x * (_screenWidth - _starSize),
                 top: star.y * (_screenHeight - _starSize),
                 child: const Icon(Icons.star, color: AppTheme.solarGold, size: _starSize),
               ),
+            // Black hole
             Positioned(
               left: _actualLeft,
               bottom: 20,
@@ -346,6 +462,7 @@ class _CatchStarGameState extends State<CatchStarGame> {
                 },
               ),
             ),
+            // Petunjuk
             Positioned(
               bottom: _blackHoleSize + 30,
               left: 0,
@@ -358,7 +475,7 @@ class _CatchStarGameState extends State<CatchStarGame> {
                     borderRadius: BorderRadius.circular(20),
                   ),
                   child: const Text(
-                    'Miringkan HP - semakin miring semakin cepat',
+                    'Miringkan HP ke KANAN / KIRI | Target: 20 bintang',
                     style: TextStyle(color: Colors.white70, fontSize: 10),
                   ),
                 ),

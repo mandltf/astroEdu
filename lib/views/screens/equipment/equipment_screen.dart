@@ -115,7 +115,7 @@ class _EquipmentScreenState extends State<EquipmentScreen> {
                   crossAxisCount: 2,
                   crossAxisSpacing: 12,
                   mainAxisSpacing: 12,
-                  childAspectRatio: 0.75, // Diubah dari 0.7 menjadi 0.75 (grid lebih pendek, space lebih sedikit)
+                  childAspectRatio: 0.79, // Diubah dari 0.7 menjadi 0.75 (grid lebih pendek, space lebih sedikit)
                 ),
                 itemCount: _equipments.length,
                 itemBuilder: (context, index) {
