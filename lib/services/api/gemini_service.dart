@@ -12,9 +12,14 @@ class GeminiService {
   Future<void> _init() async {
     if (_initialized) return;
     
-    // API key diambil dari constants.dart
+    // 🔥 Ganti dengan model yang tersedia di akunmu
+    // Pilihan: 
+    // - 'gemini-2.5-flash-lite' 
+    // - 'gemini-2.5-flash' 
+    // - 'gemini-2.0-flash-lite' 
+    // - 'gemini-2.0-flash'
     _model = GenerativeModel(
-      model: 'gemini-1.5-flash-latest',
+      model: 'gemini-2.5-flash-lite',  // ✅ Paling direkomendasikan
       apiKey: AppConstants.geminiApiKey,
       generationConfig: GenerationConfig(
         temperature: 0.7,
@@ -27,31 +32,31 @@ class GeminiService {
   Future<String> sendMessage(
     List<Map<String, String>> conversationHistory,
     String newMessage) async {
-    if (!_isAstronomyRelated(newMessage)) {
-      return "🚫 Hmm... itu di luar topik astronomi 😅\n\nCoba tanyakan tentang planet, bintang, galaksi, atau fenomena luar angkasa 🚀";
-    }
+    
+    // Cek API key
     if (AppConstants.geminiApiKey.isEmpty ||
         AppConstants.geminiApiKey == 'YOUR_GEMINI_API_KEY') {
       return _getOfflineResponse(newMessage);
     }
 
+    // Filter topik astronomi
+    if (!_isAstronomyRelated(newMessage)) {
+      return "🚫 Hmm... itu di luar topik astronomi 😅\n\nCoba tanyakan tentang planet, bintang, galaksi, atau fenomena luar angkasa 🚀";
+    }
+
     try {
       await _init();
 
-      final chat = _model.startChat(
-        history: conversationHistory.map((m) {
-          return Content(
-            m['role'] == 'user' ? 'user' : 'model',
-            [TextPart(m['message']!)],
-          );
-        }).toList(),
-      );
-
+      final chat = _model.startChat();
       final response = await chat.sendMessage(Content.text(newMessage));
 
-      return response.text ?? 'Tidak ada respon dari AI.';
+      if (response.text == null || response.text!.isEmpty) {
+        return 'Maaf, saya tidak bisa menjawab pertanyaan itu. Coba tanyakan hal lain tentang astronomi! 🌠';
+      }
+
+      return response.text!;
     } catch (e) {
-      print("ERROR GEMINI: $e");
+      if (kDebugMode) print("❌ ERROR GEMINI: $e");
       return _getOfflineResponse(newMessage);
     }
   }
@@ -69,20 +74,18 @@ class GeminiService {
     } else if (lower.contains('lubang hitam') || lower.contains('black hole')) {
       return '🕳️ Lubang hitam punya gravitasi sangat kuat, cahaya pun tak bisa lepas. Di pusat Bima Sakti ada Sagittarius A*, massanya 4 juta kali Matahari!';
     }
-    return '🌠 Halo! Aku AstroBot. Koneksi internet sedang bermasalah, jadi aku pakai mode darurat. Tanyakan tentang planet, bintang, bulan, galaksi, atau lubang hitam ya! 🚀';
+    return '🌠 Halo! Aku AstroBot. Tanyakan tentang planet, bintang, bulan, galaksi, atau lubang hitam ya! 🚀';
   }
 
   bool _isAstronomyRelated(String text) {
     final keywords = [
-      'planet', 'bintang', 'galaksi', 'bulan', 'matahari',
-      'tata surya', 'orbit', 'asteroid', 'komet',
-      'black hole', 'lubang hitam', 'nebula',
-      'supernova', 'gravitasi', 'antariksa',
-      'rasi', 'konstelasi', 'meteor', 'gerhana'
+      'planet', 'bintang', 'galaksi', 'bulan', 'matahari', 'surya',
+      'orbit', 'asteroid', 'komet', 'black hole', 'lubang hitam', 
+      'nebula', 'supernova', 'gravitasi', 'antariksa', 'ruang angkasa',
+      'rasi', 'konstelasi', 'meteor', 'gerhana', 'mars', 'jupiter', 
+      'saturnus', 'uranus', 'neptunus', 'merkurius', 'venus', 'bumi'
     ];
-
     final lower = text.toLowerCase();
-
     return keywords.any((k) => lower.contains(k));
   }
 }
