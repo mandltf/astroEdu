@@ -133,7 +133,7 @@ class _RasiListScreenState extends State<RasiListScreen> {
     final itemCount = filtered.isEmpty ? 0 : filtered.length + 1;
 
     return Scaffold(
-      appBar: AstroAppBar(title: '⭐ Rasi Bintang'),
+      appBar: AstroAppBar(title: ' Rasi Bintang'),
       body: StarBackground(
         child: _loading ? const Center(child: CircularProgressIndicator()) : Column(
           children: [
