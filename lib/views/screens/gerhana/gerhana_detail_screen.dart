@@ -18,7 +18,7 @@ class GerhanaDetailScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final String assetPath = 'assets/images/gerhana/${item.id.toLowerCase().replaceAll(' ', '_')}.jpg';
+    final String assetPath = 'assets/images/gerhana/${item.name.toLowerCase().replaceAll(' ', '_')}.jpg';
     final String wikiSearchQuery = item.name.toLowerCase().contains('matahari')
         ? 'Gerhana matahari'
         : 'Gerhana bulan';
