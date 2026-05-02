@@ -155,7 +155,7 @@ class _GerhanaListScreenState extends State<GerhanaListScreen> {
     final itemCount = filtered.isEmpty ? 0 : filtered.length + 1;
 
     return Scaffold(
-      appBar: AstroAppBar(title: '🌑 Gerhana'),
+      appBar: AstroAppBar(title: ' Gerhana'),
       body: StarBackground(
         child: _loading 
             ? const Center(child: CircularProgressIndicator(color: AppTheme.auroraBlue)) 

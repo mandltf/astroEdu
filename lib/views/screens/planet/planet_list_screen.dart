@@ -144,7 +144,7 @@ class _PlanetListScreenState extends State<PlanetListScreen> {
     final itemCount = filtered.isEmpty ? 0 : filtered.length + 1;
 
     return Scaffold(
-      appBar: AstroAppBar(title: '🪐 Planet'),
+      appBar: AstroAppBar(title: ' Planet'),
       body: StarBackground(
         child: _loading ? const Center(child: CircularProgressIndicator()) : Column(
           children: [
