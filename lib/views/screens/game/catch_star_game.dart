@@ -44,7 +44,7 @@ class _CatchStarGameState extends State<CatchStarGame> {
 
   final String _fact =
       "Lubang hitam memiliki gravitasi sangat kuat sehingga "
-      "bintang pun bisa 'dimakan'! Ketika bintang terlalu dekat, "
+      "bintang pun bisa 'dimakan'!"
       "Sekarang, kamu jadi lubang hitam. Miringkan HP untuk memakan bintang jatuh!";
 
   @override
@@ -93,6 +93,7 @@ class _CatchStarGameState extends State<CatchStarGame> {
     });
   }
 
+
   void _startGameLoop() {
     _spawnTimer?.cancel();
     _moveTimer?.cancel();
@@ -103,7 +104,8 @@ class _CatchStarGameState extends State<CatchStarGame> {
           _stars.add(Star(
             x: _random.nextDouble(),
             y: 0,
-            speed: 0.007 + _random.nextDouble() * 0.01,
+            // Kecepatan dikurangi agar lebih mudah dimainkan
+            speed: 0.003 + _random.nextDouble() * 0.005, 
           ));
         });
       }
@@ -115,6 +117,7 @@ class _CatchStarGameState extends State<CatchStarGame> {
       }
     });
   }
+
 
   void _updateStars() {
     List<Star> remaining = [];
@@ -178,7 +181,7 @@ class _CatchStarGameState extends State<CatchStarGame> {
   // WIDGET DIALOG CUSTOM (Dibuat di dalam Stack Body)
   Widget _buildOverlayDialog() {
     String title = !_isGameStarted 
-        ? '🕳️ BLACK HOLE GAME' 
+        ? '🕳️ BLACK HOLE GAME 🕳️' 
         : (_isWin ? '🌟 MENANG!' : '💀 GAME OVER');
     
     String content = !_isGameStarted ? _fact : 'Skor Anda: $_score';
