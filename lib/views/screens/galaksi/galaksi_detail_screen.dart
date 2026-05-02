@@ -19,11 +19,7 @@ class GalaksiDetailScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Mengambil data deskripsi dari wikiData (hasil fetch) atau fallback ke description model
-    final extract = item.wikiData?['extract'] ?? item.description;
-    
-    // Path asset diasumsikan: assets/images/galaksi/nama_galaksi.jpg
-    // Kamu bisa menyesuaikan penamaan file-nya di sini
+    // Path asset: pastikan file di folder berformat nama_galaksi.jpg (huruf kecil)
     final String assetPath = 'assets/images/galaksi/${item.name.toLowerCase().replaceAll(' ', '_')}.jpg';
 
     return Scaffold(
@@ -32,7 +28,6 @@ class GalaksiDetailScreen extends StatelessWidget {
         child: CustomScrollView(
           physics: const BouncingScrollPhysics(),
           slivers: [
-            // AppBar dengan Hero Image dari Assets
             SliverAppBar(
               expandedHeight: 380,
               pinned: true,
@@ -65,11 +60,9 @@ class GalaksiDetailScreen extends StatelessWidget {
                 background: Stack(
                   fit: StackFit.expand,
                   children: [
-                    // Menampilkan gambar dari Assets
                     Image.asset(
                       assetPath,
                       fit: BoxFit.cover,
-                      // Jika gambar tidak ditemukan di assets, tampilkan fallback (Emoji/Placeholder)
                       errorBuilder: (context, error, stackTrace) {
                         return Container(
                           decoration: BoxDecoration(
@@ -86,7 +79,6 @@ class GalaksiDetailScreen extends StatelessWidget {
                         );
                       },
                     ),
-                    // Gradient Bottom Overlay
                     const DecoratedBox(
                       decoration: BoxDecoration(
                         gradient: LinearGradient(
@@ -108,49 +100,42 @@ class GalaksiDetailScreen extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const SizedBox(height: 15),
+                    const SizedBox(height: 20),
                     Center(child: _buildTypeTag(item.type)),
-                    const SizedBox(height: 30),
-                    
-                    // Grid Statistik Angka (Massa, Diameter, Bintang, dll)
-                    _buildStatGrid(),
-                    
                     const SizedBox(height: 35),
-                   
 
-                    _sectionTitle(' Deskripsi Ilmiah'),
+                    _sectionTitle('🌌 Deskripsi Ilmiah'),
                     const SizedBox(height: 12),
 
-                    // Gunakan FutureBuilder untuk mengambil data dari DataController
                     FutureBuilder<Map<String, dynamic>?>(
-                      future: DataController.instance.getWikiData(item.name, category: 'galaksi'),
-                      builder: (context, snapshot) {
-                        // 1. Jika data masih dalam proses loading
-                        if (snapshot.connectionState == ConnectionState.waiting) {
-                          return _buildDescriptionCard("Sedang menyinkronkan dengan data Wikipedia...");
+                      future: () async {
+                        // 1. Coba cari nama aslinya dulu (Misal: "Bima Sakti")
+                        var data = await DataController.instance.getWikiData(item.name, category: 'galaksi');
+                        
+                        // 2. Jika gagal (null), coba tambahkan kata "Galaksi " di depannya
+                        if (data == null || data['extract'] == null) {
+                          data = await DataController.instance.getWikiData("Galaksi ${item.name}", category: 'galaksi');
                         }
                         
-                        // 2. Jika terjadi error atau data tidak ditemukan
-                        if (snapshot.hasError || snapshot.data == null) {
-                          return _buildDescriptionCard(item.description); // Gunakan deskripsi lokal sebagai cadangan
+                        // 3. Khusus untuk Awan Magellan Besar (karena judulnya unik)
+                        if (data == null && item.name.toLowerCase().contains("magellan")) {
+                          data = await DataController.instance.getWikiData("Awan Magellan Besar", category: 'galaksi');
                         }
 
-                        // 3. Jika data berhasil didapat
-                        final wikiExtract = snapshot.data!['extract'];
-                        return _buildDescriptionCard(wikiExtract ?? item.description);
+                        return data;
+                      }(),
+                      builder: (context, snapshot) {
+                        if (snapshot.connectionState == ConnectionState.waiting) {
+                          return _buildLoadingCard();
+                        }
+                        
+                        // Gunakan hasil Wiki, jika tetap gagal pakai deskripsi lokal
+                        final content = snapshot.data?['extract'] ?? item.description;
+                        return _buildDescriptionCard(content);
                       },
                     ),
-
-                    const SizedBox(height: 12),
-                    _buildDescriptionCard(extract),
                     
-                    const SizedBox(height: 35),
-                    _sectionTitle(' Fakta Galaksi'),
-                    const SizedBox(height: 12),
-                    // List Fakta
-                    ...item.facts.map((fact) => _buildFactTile(fact)).toList(),
-                    
-                    const SizedBox(height: 100), // Spacing bawah agar tidak mepet
+                    const SizedBox(height: 100), 
                   ],
                 ),
               ),
@@ -161,7 +146,6 @@ class GalaksiDetailScreen extends StatelessWidget {
     );
   }
 
-  // Widget Tag Tipe Galaksi (Spiral, Elips, dll)
   Widget _buildTypeTag(String type) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -184,79 +168,6 @@ class GalaksiDetailScreen extends StatelessWidget {
     );
   }
 
-  // Grid Info Angka
-  Widget _buildStatGrid() {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        return GridView.count(
-          padding: EdgeInsets.zero,
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          crossAxisCount: 2,
-          childAspectRatio: 2.4,
-          crossAxisSpacing: 15,
-          mainAxisSpacing: 15,
-          children: [
-            _statCard('Massa Estimasi', item.mass ?? '1.5 × 10¹² M☉', Icons.auto_awesome_motion),
-            _statCard('Diameter', item.diameter, Icons.straighten),
-            _statCard('Populasi Bintang', item.stars, Icons.brightness_high),
-            _statCard('Periode Rotasi', item.rotationPeriod ?? '240 Myr', Icons.sync),
-          ],
-        );
-      },
-    );
-  }
-
-  // Card Statistik individual dengan efek Blur
-  Widget _statCard(String label, String value, IconData icon) {
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(18),
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-        child: Container(
-          padding: const EdgeInsets.all(12),
-          decoration: BoxDecoration(
-            color: Colors.white.withOpacity(0.05),
-            borderRadius: BorderRadius.circular(18),
-            border: Border.all(color: Colors.white.withOpacity(0.1)),
-          ),
-          child: Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: AppTheme.solarGold.withOpacity(0.1),
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(icon, color: AppTheme.solarGold, size: 18),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(label, style: const TextStyle(color: Colors.white54, fontSize: 10)),
-                    const SizedBox(height: 2),
-                    Text(value, 
-                      style: const TextStyle(
-                        color: Colors.white, 
-                        fontSize: 12, 
-                        fontWeight: FontWeight.bold,
-                        letterSpacing: 0.5
-                      ),
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ],
-                ),
-              )
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
   Widget _sectionTitle(String title) {
     return Row(
       children: [
@@ -270,14 +181,28 @@ class GalaksiDetailScreen extends StatelessWidget {
     );
   }
 
+  Widget _buildLoadingCard() {
+    return Container(
+      width: double.infinity,
+      height: 150,
+      decoration: BoxDecoration(
+        color: AppTheme.cardBg.withOpacity(0.2),
+        borderRadius: BorderRadius.circular(24),
+      ),
+      child: const Center(
+        child: CircularProgressIndicator(color: AppTheme.auroraBlue),
+      ),
+    );
+  }
+
   Widget _buildDescriptionCard(String content) {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(22),
       decoration: BoxDecoration(
         color: AppTheme.cardBg.withOpacity(0.4),
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: AppTheme.cardBorder.withOpacity(0.5)),
+        border: Border.all(color: AppTheme.cardBorder.withOpacity(0.3)),
       ),
       child: Text(
         content,
@@ -287,30 +212,6 @@ class GalaksiDetailScreen extends StatelessWidget {
           height: 1.8,
           letterSpacing: 0.3
         ),
-      ),
-    );
-  }
-
-  Widget _buildFactTile(String fact) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.03),
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Icon(Icons.stars, color: AppTheme.auroraBlue, size: 20),
-          const SizedBox(width: 15),
-          Expanded(
-            child: Text(
-              fact,
-              style: const TextStyle(color: Colors.white70, fontSize: 14, height: 1.5),
-            ),
-          ),
-        ],
       ),
     );
   }
