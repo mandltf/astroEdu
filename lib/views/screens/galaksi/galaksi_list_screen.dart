@@ -41,7 +41,6 @@ class _GalaksiListScreenState extends State<GalaksiListScreen> {
         shortDesc: 'Galaksi ${data['name']}',
         description: 'Memuat dari Wikipedia...',
         type: 'Belum diketahui',
-        diameter: 'Belum diketahui',
         stars: 'Belum diketahui',
         facts: [],
         wikiData: null,

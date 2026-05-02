@@ -36,8 +36,8 @@ class _RasiListScreenState extends State<RasiListScreen> {
     _items = AppConstants.rasiList.map((data) => RasiModel(
       id: data['id'], name: data['name'], emoji: data['emoji'], color: data['color'],
       shortDesc: 'Rasi bintang ${data['name']}', description: 'Memuat dari Wikipedia...',
-      bestTime: 'Belum diketahui', visibility: 'Belum diketahui', brightestStar: 'Belum diketahui',
-      stars: 0, facts: [], season: 'Belum diketahui', wikiData: null,
+      bestTime: 'Belum diketahui',
+      stars: 0, facts: [], wikiData: null,
     )).toList();
     final uid = await AuthService.instance.getCurrentUserId();
     setState(() => _userId = uid);

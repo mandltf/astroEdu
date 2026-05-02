@@ -39,8 +39,6 @@ class _PlanetListScreenState extends State<PlanetListScreen> {
         name: data['name'],
         emoji: data['emoji'],
         color: data['color'],
-        distance: 'Mengambil data...',
-        diameter: 'Mengambil data...',
         moons: 0,
         description: 'Memuat dari Wikipedia...',
         shortDesc: 'Planet ${data['name']}',
