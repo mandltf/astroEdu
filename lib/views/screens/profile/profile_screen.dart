@@ -37,6 +37,14 @@ class _ProfileScreenState extends State<ProfileScreen> with WidgetsBindingObserv
   }
 
   @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      // Reload profile setiap kali app kembali ke foreground (dari quiz, screen lain, dll)
+      _loadProfile();
+    }
+  }
+
+  @override
   void didChangeDependencies() {
     super.didChangeDependencies();
     _loadProfile();
