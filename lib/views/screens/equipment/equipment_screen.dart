@@ -99,7 +99,7 @@ class _EquipmentScreenState extends State<EquipmentScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AstroAppBar(
-        title: '🔭 Peralatan Astronomi',
+        title: ' Peralatan Astronomi',
         actions: [
           DropdownButton<String>(
             value: _selectedCurrency,
@@ -135,7 +135,7 @@ class _EquipmentScreenState extends State<EquipmentScreen> {
                   crossAxisCount: 2,
                   crossAxisSpacing: 12,
                   mainAxisSpacing: 12,
-                  childAspectRatio: 0.79,
+                  childAspectRatio: 0.77,
                 ),
                 itemCount: _equipments.length,
                 itemBuilder: (context, index) {
@@ -155,11 +155,11 @@ class _EquipmentScreenState extends State<EquipmentScreen> {
                               top: Radius.circular(16)),
                           child: Image.asset(
                             item['image'],
-                            height: 115,
+                            height: 120,
                             width: double.infinity,
                             fit: BoxFit.cover,
                             errorBuilder: (_, __, ___) => Container(
-                              height: 115,
+                              height: 120,
                               color: AppTheme.deepSpace,
                               child: Center(
                                 child: Text(
