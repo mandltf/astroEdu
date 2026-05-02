@@ -93,7 +93,7 @@ class GerhanaDetailScreen extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     const SizedBox(height: 10),
-                    _sectionTitle('🌑 Mekanisme Fenomena'),
+                    _sectionTitle(' Mekanisme Fenomena'),
                     const SizedBox(height: 15),
                     _buildDescriptionContent(context, wikiSearchQuery),
                     const SizedBox(height: 100),

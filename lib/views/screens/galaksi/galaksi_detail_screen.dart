@@ -91,7 +91,7 @@ class GalaksiDetailScreen extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     const SizedBox(height: 30),
-                    _sectionTitle('🌌 Deskripsi Ilmiah'),
+                    _sectionTitle(' Deskripsi Ilmiah'),
                     const SizedBox(height: 15),
                     _buildDescriptionContent(context),
                     const SizedBox(height: 100),

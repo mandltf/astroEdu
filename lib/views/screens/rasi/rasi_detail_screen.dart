@@ -84,7 +84,7 @@ class RasiDetailScreen extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     const SizedBox(height: 30),
-                    _sectionTitle('✨ Mitologi & Sains'),
+                    _sectionTitle(' Mitologi & Sains'),
                     const SizedBox(height: 15),
                     _buildDescriptionContent(context),
                     const SizedBox(height: 100),

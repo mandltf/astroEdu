@@ -85,7 +85,7 @@ class PlanetDetailScreen extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     const SizedBox(height: 30),
-                    _sectionTitle('📖 Karakteristik'),
+                    _sectionTitle(' Karakteristik'),
                     const SizedBox(height: 15),
                     _buildDescriptionContent(context),
                     const SizedBox(height: 100),
