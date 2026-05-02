@@ -2,8 +2,7 @@ import 'package:flutter/material.dart';
 import '../../../models/gerhana_model.dart';
 import '../../../utils/app_theme.dart';
 import '../../widgets/star_background.dart';
-import '../../../controllers/data_controller.dart'; 
-import 'dart:ui';
+import '../../../controllers/data_controller.dart';
 
 class GerhanaDetailScreen extends StatelessWidget {
   final GerhanaModel item;
@@ -20,10 +19,8 @@ class GerhanaDetailScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final String assetPath = 'assets/images/gerhana/${item.id.toLowerCase().replaceAll(' ', '_')}.jpg';
-
-    // Normalisasi Query: Hanya mencari "Gerhana matahari" atau "Gerhana bulan"
-    final String wikiSearchQuery = item.name.toLowerCase().contains('matahari') 
-        ? 'Gerhana matahari' 
+    final String wikiSearchQuery = item.name.toLowerCase().contains('matahari')
+        ? 'Gerhana matahari'
         : 'Gerhana bulan';
 
     return Scaffold(
@@ -55,7 +52,7 @@ class GerhanaDetailScreen extends StatelessWidget {
                   style: const TextStyle(
                     fontWeight: FontWeight.bold,
                     letterSpacing: 2,
-                    fontSize: 22,
+                    fontSize: 20,
                     shadows: [Shadow(blurRadius: 20, color: Colors.black)],
                   ),
                 ),
@@ -65,10 +62,10 @@ class GerhanaDetailScreen extends StatelessWidget {
                     Image.asset(
                       assetPath,
                       fit: BoxFit.contain,
-                      errorBuilder: (context, error, stackTrace) => 
-                          Center(child: Text(item.emoji, style: const TextStyle(fontSize: 120))),
+                      errorBuilder: (context, error, stackTrace) => Center(
+                        child: Text(item.emoji, style: const TextStyle(fontSize: 100)),
+                      ),
                     ),
-                    // Glow Effect
                     Center(
                       child: Container(
                         width: 200,
@@ -80,7 +77,7 @@ class GerhanaDetailScreen extends StatelessWidget {
                               color: Color(item.color).withOpacity(0.2),
                               blurRadius: 100,
                               spreadRadius: 20,
-                            )
+                            ),
                           ],
                         ),
                       ),
@@ -89,7 +86,6 @@ class GerhanaDetailScreen extends StatelessWidget {
                 ),
               ),
             ),
-
             SliverToBoxAdapter(
               child: Padding(
                 padding: const EdgeInsets.all(20.0),
@@ -97,41 +93,9 @@ class GerhanaDetailScreen extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     const SizedBox(height: 10),
-                    
-                    // Judul Section Bergaya Planet (dengan bar vertikal)
-                    _sectionTitle(' Mekanisme Fenomena'),
+                    _sectionTitle('🌑 Mekanisme Fenomena'),
                     const SizedBox(height: 15),
-
-                    FutureBuilder<Map<String, dynamic>?>(
-                      future: DataController.instance.getWikiData(wikiSearchQuery, category: 'gerhana'),
-                      builder: (context, snapshot) {
-                        if (snapshot.connectionState == ConnectionState.waiting) {
-                          return _buildDescriptionLoading();
-                        }
-
-                        // Jika Wiki gagal, gunakan deskripsi lokal
-                        final String displayContent = (snapshot.hasData && snapshot.data!['extract'] != null)
-                            ? snapshot.data!['extract']
-                            : item.description;
-                        
-                        return Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            _buildDescriptionCard(displayContent),
-                            
-                            // Info tambahan bahwa ini data umum
-                            Padding(
-                              padding: const EdgeInsets.only(top: 12, left: 8),
-                              child: Text(
-                                "* Menampilkan informasi umum $wikiSearchQuery.",
-                                style: const TextStyle(color: Colors.white38, fontSize: 11, fontStyle: FontStyle.italic),
-                              ),
-                            ),
-                          ],
-                        );
-                      },
-                    ),
-                    
+                    _buildDescriptionContent(context, wikiSearchQuery),
                     const SizedBox(height: 100),
                   ],
                 ),
@@ -143,53 +107,63 @@ class GerhanaDetailScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildDescriptionLoading() {
-    return Container(
-      width: double.infinity,
-      height: 150,
-      decoration: BoxDecoration(
-        color: AppTheme.cardBg.withOpacity(0.2),
-        borderRadius: BorderRadius.circular(24),
-      ),
-      child: const Center(
-        child: CircularProgressIndicator(
-          color: AppTheme.auroraBlue,
-          strokeWidth: 2,
-        ),
-      ),
-    );
-  }
-
-  // Section Title dengan style bar vertikal mirip Planet Detail
   Widget _sectionTitle(String title) {
     return Row(
       children: [
-        Container(
-          width: 4,
-          height: 22,
-          decoration: BoxDecoration(
-            color: AppTheme.auroraBlue,
-            borderRadius: BorderRadius.circular(2),
-            boxShadow: [
-              BoxShadow(
-                color: AppTheme.auroraBlue.withOpacity(0.5),
-                blurRadius: 8,
-                spreadRadius: 1,
-              )
-            ],
-          ),
-        ),
+        Container(width: 4, height: 22, color: AppTheme.solarGold),
         const SizedBox(width: 12),
         Text(
           title,
           style: const TextStyle(
-            color: Colors.white, 
-            fontSize: 19, 
+            color: Colors.white,
+            fontSize: 18,
             fontWeight: FontWeight.bold,
             letterSpacing: 0.5,
           ),
         ),
       ],
+    );
+  }
+
+  Widget _buildDescriptionContent(BuildContext context, String query) {
+    return FutureBuilder<Map<String, dynamic>?>(
+      future: DataController.instance.getWikiData(query, category: 'gerhana'),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return _buildLoadingCard();
+        }
+        final content = (snapshot.hasData && snapshot.data!['extract'] != null)
+            ? snapshot.data!['extract']
+            : item.description;
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _buildDescriptionCard(content),
+            Padding(
+              padding: const EdgeInsets.only(top: 12, left: 8),
+              child: Text(
+                "* Menampilkan informasi umum $query.",
+                style: const TextStyle(color: Colors.white38, fontSize: 11, fontStyle: FontStyle.italic),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _buildLoadingCard() {
+    return Container(
+      width: double.infinity,
+      height: 150,
+      decoration: BoxDecoration(
+        color: AppTheme.cardBg.withOpacity(0.3),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: AppTheme.solarGold.withOpacity(0.3)),
+      ),
+      child: const Center(
+        child: CircularProgressIndicator(color: AppTheme.solarGold, strokeWidth: 2),
+      ),
     );
   }
 
@@ -199,21 +173,14 @@ class GerhanaDetailScreen extends StatelessWidget {
       padding: const EdgeInsets.all(22),
       decoration: BoxDecoration(
         color: AppTheme.cardBg.withOpacity(0.4),
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: AppTheme.cardBorder.withOpacity(0.3)),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.2),
-            blurRadius: 20,
-            offset: const Offset(0, 10),
-          )
-        ],
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: AppTheme.solarGold.withOpacity(0.5)),
       ),
       child: Text(
         content,
         style: TextStyle(
-          color: Colors.white.withOpacity(0.85), 
-          fontSize: 15, 
+          color: Colors.white.withOpacity(0.85),
+          fontSize: 15,
           height: 1.8,
           letterSpacing: 0.2,
         ),

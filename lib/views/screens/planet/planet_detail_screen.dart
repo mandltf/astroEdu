@@ -2,8 +2,7 @@ import 'package:flutter/material.dart';
 import '../../../models/planet_model.dart';
 import '../../../utils/app_theme.dart';
 import '../../widgets/star_background.dart';
-import '../../../controllers/data_controller.dart'; 
-import 'dart:ui';
+import '../../../controllers/data_controller.dart';
 
 class PlanetDetailScreen extends StatelessWidget {
   final PlanetModel planet;
@@ -19,7 +18,6 @@ class PlanetDetailScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // TIPS: Pastikan planet.name di database adalah "Bumi", "Mars", dll (Tanpa Spasi/Huruf Kecil)
     final String assetPath = 'assets/images/planets/${planet.name.toLowerCase().replaceAll(' ', '_')}.jpg';
 
     return Scaffold(
@@ -50,7 +48,7 @@ class PlanetDetailScreen extends StatelessWidget {
                   planet.name,
                   style: const TextStyle(
                     fontWeight: FontWeight.bold,
-                    fontSize: 24,
+                    fontSize: 22,
                     letterSpacing: 2,
                     shadows: [Shadow(blurRadius: 15, color: Colors.black)],
                   ),
@@ -62,13 +60,9 @@ class PlanetDetailScreen extends StatelessWidget {
                     Image.asset(
                       assetPath,
                       fit: BoxFit.contain,
-                      // Jika error, dia akan lari ke emoji (Tanda file tidak ditemukan)
-                      errorBuilder: (context, error, stackTrace) {
-                        debugPrint("Gagal memuat asset: $assetPath"); // Cek log di VS Code
-                        return Center(
-                          child: Text(planet.emoji, style: const TextStyle(fontSize: 120)),
-                        );
-                      },
+                      errorBuilder: (context, error, stackTrace) => Center(
+                        child: Text(planet.emoji, style: const TextStyle(fontSize: 100)),
+                      ),
                     ),
                     const DecoratedBox(
                       decoration: BoxDecoration(
@@ -84,7 +78,6 @@ class PlanetDetailScreen extends StatelessWidget {
                 ),
               ),
             ),
-
             SliverToBoxAdapter(
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -92,42 +85,16 @@ class PlanetDetailScreen extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     const SizedBox(height: 30),
-                    _sectionTitle(' Karakteristik'),
+                    _sectionTitle('📖 Karakteristik'),
                     const SizedBox(height: 15),
-
-                    FutureBuilder<Map<String, dynamic>?>(
-                      future: DataController.instance.getWikiData(planet.name, category: 'planet'),
-                      builder: (context, snapshot) {
-                        if (snapshot.connectionState == ConnectionState.waiting) {
-                          return _buildDescriptionLoading();
-                        }
-                        
-                        final wikiDescription = snapshot.data?['extract'];
-                        return _buildDescriptionCard(wikiDescription ?? planet.description);
-                      },
-                    ),
-                    
-                    const SizedBox(height: 100), // Ruang kosong di bawah
+                    _buildDescriptionContent(context),
+                    const SizedBox(height: 100),
                   ],
                 ),
               ),
             ),
           ],
         ),
-      ),
-    );
-  }
-
-  Widget _buildDescriptionLoading() {
-    return Container(
-      width: double.infinity,
-      height: 150,
-      decoration: BoxDecoration(
-        color: AppTheme.cardBg.withOpacity(0.3),
-        borderRadius: BorderRadius.circular(24),
-      ),
-      child: const Center(
-        child: CircularProgressIndicator(color: AppTheme.solarGold, strokeWidth: 2),
       ),
     );
   }
@@ -145,18 +112,50 @@ class PlanetDetailScreen extends StatelessWidget {
     );
   }
 
+  Widget _buildDescriptionContent(BuildContext context) {
+    return FutureBuilder<Map<String, dynamic>?>(
+      future: DataController.instance.getWikiData(planet.name, category: 'planet'),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return _buildLoadingCard();
+        }
+        final content = snapshot.data?['extract'] ?? planet.description;
+        return _buildDescriptionCard(content);
+      },
+    );
+  }
+
+  Widget _buildLoadingCard() {
+    return Container(
+      width: double.infinity,
+      height: 150,
+      decoration: BoxDecoration(
+        color: AppTheme.cardBg.withOpacity(0.3),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: AppTheme.solarGold.withOpacity(0.3)),
+      ),
+      child: const Center(
+        child: CircularProgressIndicator(color: AppTheme.solarGold, strokeWidth: 2),
+      ),
+    );
+  }
+
   Widget _buildDescriptionCard(String content) {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(22),
       decoration: BoxDecoration(
-        color: AppTheme.cardBg.withOpacity(0.5),
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: AppTheme.cardBorder.withOpacity(0.4)),
+        color: AppTheme.cardBg.withOpacity(0.4),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: AppTheme.solarGold.withOpacity(0.5)),
       ),
       child: Text(
         content,
-        style: TextStyle(color: Colors.white.withOpacity(0.8), fontSize: 15, height: 1.8),
+        style: TextStyle(
+          color: Colors.white.withOpacity(0.85),
+          fontSize: 15,
+          height: 1.8,
+        ),
       ),
     );
   }
