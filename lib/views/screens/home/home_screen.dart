@@ -333,169 +333,173 @@ Widget _buildTimeRow(String zona, String waktu) {
   }
 
   Widget _buildFenomenaCard() {
-  if (_loadingFenomena) {
-    return const Center(child: CircularProgressIndicator());
-  }
-  
-  final fenomena = _fenomenaHariIni;
-  if (fenomena == null) {
+    if (_loadingFenomena) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    final fenomena = _fenomenaHariIni;
+    if (fenomena == null) {
+      return Container(
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: AppTheme.cardBg,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: AppTheme.cardBorder),
+        ),
+        child: const Text('Tidak ada fenomena astronomi signifikan hari ini.',
+            style: TextStyle(color: Color(0xFF9CA3AF), fontSize: 12)),
+      );
+    }
+
+    // --- LOGIKA LOKASI ---
+    String city = '';
+    if (_position != null) {
+      city = LocationService.instance.getLocationName(_position!.latitude, _position!.longitude);
+    } else {
+      city = 'Lokasi Anda';
+    }
+
+    // --- LOGIKA IKON OTOMATIS ---
+    String emoji = '🌟'; 
+    String lowerNama = fenomena.nama.toLowerCase();
+    if (lowerNama.contains('meteor')) {
+      emoji = '☄️';
+    } else if (lowerNama.contains('gerhana') || lowerNama.contains('moon') || lowerNama.contains('bulan')) {
+      emoji = '🌑';
+    } else if (lowerNama.contains('supermoon')) {
+      emoji = '🌕';
+    } else if (lowerNama.contains('planet') || lowerNama.contains('konjungsi')) {
+      emoji = '🪐';
+    }
+
+    // --- LOGIKA WAKTU ---
+    String userTimezone = 'WIB';
+    if (_position != null) {
+      userTimezone = TimezoneHelper.getUserTimezone(_position!.latitude, _position!.longitude);
+    }
+
+    String bestTimeLocal = TimezoneHelper.convertToTimezone(fenomena.waktuTerbaikUtc, userTimezone);
+    String bestTimeWIB = TimezoneHelper.convertToTimezone(fenomena.waktuTerbaikUtc, 'WIB');
+    String bestTimeWITA = TimezoneHelper.convertToTimezone(fenomena.waktuTerbaikUtc, 'WITA');
+    String bestTimeWIT = TimezoneHelper.convertToTimezone(fenomena.waktuTerbaikUtc, 'WIT');
+    String bestTimeLondon = TimezoneHelper.convertToTimezone(fenomena.waktuTerbaikUtc, 'London');
+    String bestTimeUTC = fenomena.waktuTerbaikUtc;
+
     return Container(
-      padding: const EdgeInsets.all(12),
+      width: double.infinity,
       decoration: BoxDecoration(
-        color: AppTheme.cardBg,
-        borderRadius: BorderRadius.circular(16),
+        gradient: const LinearGradient(
+          colors: [Color(0xFF1E293B), Color(0xFF0F172A)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(20),
         border: Border.all(color: AppTheme.cardBorder),
       ),
-      child: const Text('Tidak ada fenomena astronomi signifikan hari ini.',
-          style: TextStyle(color: Color(0xFF9CA3AF), fontSize: 12)),
-    );
-  }
-
-  // --- LOGIKA LOKASI ---
-  String city = '';
-  if (_position != null) {
-    city = LocationService.instance.getLocationName(_position!.latitude, _position!.longitude);
-  } else {
-    city = 'Lokasi Anda';
-  }
-
-  // --- LOGIKA IKON OTOMATIS ---
-  String emoji = '🌟'; // Default
-  String lowerNama = fenomena.nama.toLowerCase();
-  if (lowerNama.contains('meteor')) {
-    emoji = '☄️'; 
-  } else if (lowerNama.contains('gerhana') || lowerNama.contains('moon') || lowerNama.contains('bulan')) {
-    emoji = '🌑';
-  } else if (lowerNama.contains('supermoon')) {
-    emoji = '🌕';
-  } else if (lowerNama.contains('planet') || lowerNama.contains('konjungsi')) {
-    emoji = '🪐';
-  }
-
-  // --- LOGIKA WAKTU ---
-  String userTimezone = 'WIB';
-  if (_position != null) {
-    userTimezone = TimezoneHelper.getUserTimezone(_position!.latitude, _position!.longitude);
-  }
-  
-  String bestTimeLocal = TimezoneHelper.convertToTimezone(fenomena.waktuTerbaikUtc, userTimezone);
-  String bestTimeWIB = TimezoneHelper.convertToTimezone(fenomena.waktuTerbaikUtc, 'WIB');
-  String bestTimeWITA = TimezoneHelper.convertToTimezone(fenomena.waktuTerbaikUtc, 'WITA');
-  String bestTimeWIT = TimezoneHelper.convertToTimezone(fenomena.waktuTerbaikUtc, 'WIT');
-  String bestTimeLondon = TimezoneHelper.convertToTimezone(fenomena.waktuTerbaikUtc, 'London');
-  String bestTimeUTC = fenomena.waktuTerbaikUtc;
-
-  return Container(
-    width: double.infinity,
-    decoration: BoxDecoration(
-      gradient: const LinearGradient(
-        colors: [Color(0xFF1E293B), Color(0xFF0F172A)],
-        begin: Alignment.topLeft,
-        end: Alignment.bottomRight,
-      ),
-      borderRadius: BorderRadius.circular(20),
-      border: Border.all(color: AppTheme.cardBorder),
-    ),
-    child: Material(
-      color: Colors.transparent,
-      borderRadius: BorderRadius.circular(20),
-      child: Padding(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Badge Atas
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-              decoration: BoxDecoration(
-                color: AppTheme.solarGold.withOpacity(0.15),
-                borderRadius: BorderRadius.circular(20),
-                border: Border.all(color: AppTheme.solarGold.withOpacity(0.4)),
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const Icon(Icons.bolt, color: AppTheme.solarGold, size: 14),
-                  const SizedBox(width: 6),
-                  Text(
-                    'Fenomena Hari Ini di $city',
-                    style: const TextStyle(
-                      color: AppTheme.solarGold, 
-                      fontSize: 12, 
-                      fontWeight: FontWeight.bold
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 18),
-            
-            // Konten Utama (Ikon + Judul + Keterangan)
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                // Ikon Berubah
-                Text(emoji, style: const TextStyle(fontSize: 30)),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        fenomena.nama,
-                        style: const TextStyle(
-                          color: Colors.white, 
-                          fontSize: 16, 
-                          fontWeight: FontWeight.bold,
-                          letterSpacing: 0.5
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      // Waktu dan Puncak
-                      Text(
-                        'Puncak: ${fenomena.tanggal}, Waktu terbaik: $bestTimeLocal $userTimezone',
-                        style: const TextStyle(
-                          color: Color(0xFFCBD5E1), 
-                          fontSize: 12,
-                          fontWeight: FontWeight.w500
-                        ),
-                      ),
-                    ],
-                  ),
+      child: Material(
+        color: Colors.transparent,
+        borderRadius: BorderRadius.circular(20),
+        child: Padding(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Badge Atas
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                decoration: BoxDecoration(
+                  color: AppTheme.solarGold.withOpacity(0.15),
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(color: AppTheme.solarGold.withOpacity(0.4)),
                 ),
-              ],
-            ),
-            const SizedBox(height: 12),
-            
-            // Tombol Detail
-            GestureDetector(
-              onTap: () => _showDetailFenomenaDialog(
-                fenomena, 
-                bestTimeWIB, bestTimeWITA, bestTimeWIT, 
-                bestTimeLondon, bestTimeUTC, userTimezone
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(Icons.bolt, color: AppTheme.solarGold, size: 14),
+                    const SizedBox(width: 6),
+                    Text(
+                      'Fenomena Hari Ini di $city',
+                      style: const TextStyle(
+                          color: AppTheme.solarGold,
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold),
+                    ),
+                  ],
+                ),
               ),
-              child: const Row(
-                mainAxisSize: MainAxisSize.min,
+              const SizedBox(height: 18),
+
+              // Konten Utama
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    'Lihat Detail',
-                    style: TextStyle(
-                      color: AppTheme.auroraBlue, 
-                      fontWeight: FontWeight.bold,
-                      fontSize: 14
+                  Text(emoji, style: const TextStyle(fontSize: 30)),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Row Judul & Tombol Detail (Dipindahkan ke sini agar sejajar di kanan)
+                        Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Expanded(
+                              child: Text(
+                                fenomena.nama,
+                                style: const TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.bold,
+                                    letterSpacing: 0.5),
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            GestureDetector(
+                              onTap: () => _showDetailFenomenaDialog(
+                                  fenomena,
+                                  bestTimeWIB,
+                                  bestTimeWITA,
+                                  bestTimeWIT,
+                                  bestTimeLondon,
+                                  bestTimeUTC,
+                                  userTimezone),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: const [
+                                  Text(
+                                    'Lihat Detail',
+                                    style: TextStyle(
+                                        color: AppTheme.auroraBlue,
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 12),
+                                  ),
+                                  Icon(Icons.chevron_right,
+                                      color: AppTheme.auroraBlue, size: 16),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 4),
+                        // Keterangan Waktu di bawah judul
+                        Text(
+                          'Puncak: ${fenomena.tanggal}, Waktu terbaik: $bestTimeLocal $userTimezone',
+                          style: const TextStyle(
+                              color: Color(0xFFCBD5E1),
+                              fontSize: 12,
+                              fontWeight: FontWeight.w500),
+                        ),
+                      ],
                     ),
                   ),
-                  SizedBox(width: 4),
-                  Icon(Icons.arrow_forward, color: AppTheme.auroraBlue, size: 16),
                 ],
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
-    ),
-  );
-}
+    );
+  }
 
   Widget _buildMenuGrid() {
     final menus = [
