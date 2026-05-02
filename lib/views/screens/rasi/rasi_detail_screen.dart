@@ -113,21 +113,6 @@ class RasiDetailScreen extends StatelessWidget {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              const Row(
-                                children: [
-                                  Icon(Icons.auto_stories, color: AppTheme.solarGold, size: 18),
-                                  SizedBox(width: 8),
-                                  Text(
-                                    "INFO MITOLOGI",
-                                    style: TextStyle(
-                                      color: AppTheme.solarGold,
-                                      fontWeight: FontWeight.w900,
-                                      letterSpacing: 1.5,
-                                      fontSize: 12,
-                                    ),
-                                  ),
-                                ],
-                              ),
                               const SizedBox(height: 12),
                               Text(
                                 wikiDescription,
