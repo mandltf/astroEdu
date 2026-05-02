@@ -90,6 +90,19 @@ class DatabaseHelper {
         FOREIGN KEY (user_id) REFERENCES users (id)
       )
     ''');
+
+    await db.execute('''
+      CREATE TABLE fenomena (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        nama TEXT NOT NULL UNIQUE,
+        tanggal TEXT NOT NULL,
+        deskripsi_singkat TEXT NOT NULL,
+        deskripsi_lengkap TEXT NOT NULL,
+        poin_pelajaran TEXT NOT NULL,
+        sumber TEXT NOT NULL,
+        waktu_terbaik_utc TEXT NOT NULL
+      )
+    ''');
   }
 
   // USER CRUD
@@ -241,6 +254,43 @@ class DatabaseHelper {
     final results = await db.query('saran_kesan',
         where: 'user_id = ?', whereArgs: [userId]);
     return results.isNotEmpty ? results.first : null;
+  }
+
+  // FENOMENA
+  Future<int> insertFenomena(Map<String, dynamic> fenomena) async {
+    final db = await database;
+    return await db.insert('fenomena', fenomena);
+  }
+
+  Future<int> insertFenomenaIfNotExists(Map<String, dynamic> fenomena) async {
+    final db = await database;
+    final exists = await db.query('fenomena',
+        where: 'nama = ?', whereArgs: [fenomena['nama']]);
+    if (exists.isEmpty) {
+      return await db.insert('fenomena', fenomena);
+    }
+    return 0;
+  }
+
+  Future<List<Map<String, dynamic>>> getAllFenomena() async {
+    final db = await database;
+    return await db.query('fenomena', orderBy: 'tanggal ASC');
+  }
+
+  Future<Map<String, dynamic>?> getFenomenaById(int id) async {
+    final db = await database;
+    final results = await db.query('fenomena', where: 'id = ?', whereArgs: [id]);
+    return results.isNotEmpty ? results.first : null;
+  }
+
+  Future<int> updateFenomena(int id, Map<String, dynamic> fenomena) async {
+    final db = await database;
+    return await db.update('fenomena', fenomena, where: 'id = ?', whereArgs: [id]);
+  }
+
+  Future<int> deleteFenomena(int id) async {
+    final db = await database;
+    return await db.delete('fenomena', where: 'id = ?', whereArgs: [id]);
   }
 
   Future close() async {

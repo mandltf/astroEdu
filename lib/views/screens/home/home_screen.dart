@@ -81,7 +81,7 @@ class _HomeScreenState extends State<HomeScreen> {
   Future<void> _loadFenomenaHariIni() async {
     setState(() => _loadingFenomena = true);
     await Future.delayed(const Duration(milliseconds: 200));
-    final fenomena = FenomenaService.instance.getFenomenaHariIni();
+    final fenomena = await FenomenaService.instance.getFenomenaHariIni();
     if (mounted) {
       setState(() {
         _fenomenaHariIni = fenomena;
