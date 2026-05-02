@@ -1,4 +1,3 @@
-// lib/models/gerhana_model.dart
 class GerhanaModel {
   final String id;
   final String name;

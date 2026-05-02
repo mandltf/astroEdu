@@ -1,4 +1,3 @@
-// lib/models/galaksi_model.dart
 class GalaksiModel {
   final String id;
   final String name;
@@ -10,6 +9,12 @@ class GalaksiModel {
   final String diameter;
   final String stars;
   final List<String> facts;
+  
+
+  final String? mass;
+  final String? distance;
+  final String? rotationPeriod;
+  
   Map<String, dynamic>? wikiData;
 
   GalaksiModel({
@@ -23,6 +28,10 @@ class GalaksiModel {
     required this.diameter,
     required this.stars,
     required this.facts,
+   
+    this.mass,
+    this.distance,
+    this.rotationPeriod,
     this.wikiData,
   });
 }

@@ -1,4 +1,3 @@
-// lib/models/rasi_model.dart
 class RasiModel {
   final String id;
   final String name;

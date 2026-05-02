@@ -1,4 +1,3 @@
-// lib/models/planet_model.dart
 class PlanetModel {
   final String id;
   final String name;
@@ -11,6 +10,11 @@ class PlanetModel {
   final String shortDesc;
   final List<String> facts;
   final String apiId;
+  
+  final String? mass;
+  final String? gravity;
+  final String? temperature;
+  
   Map<String, dynamic>? wikiData;
 
   PlanetModel({
@@ -25,6 +29,9 @@ class PlanetModel {
     required this.shortDesc,
     required this.facts,
     required this.apiId,
+    this.mass,
+    this.gravity,
+    this.temperature,
     this.wikiData,
   });
 
@@ -36,11 +43,14 @@ class PlanetModel {
       color: json['color'],
       distance: json['distance'],
       diameter: json['diameter'],
-      moons: json['moons'],
+      moons: json['moons'] ?? 0,
       description: json['description'],
       shortDesc: json['shortDesc'],
       facts: List<String>.from(json['facts']),
       apiId: json['api_id'],
+      mass: json['mass'],
+      gravity: json['gravity'],
+      temperature: json['temperature'],
       wikiData: json['wiki_data'],
     );
   }
@@ -57,6 +67,9 @@ class PlanetModel {
     'shortDesc': shortDesc,
     'facts': facts,
     'api_id': apiId,
+    'mass': mass,
+    'gravity': gravity,
+    'temperature': temperature,
     'wiki_data': wikiData,
   };
 }
