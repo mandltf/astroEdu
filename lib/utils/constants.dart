@@ -26,8 +26,8 @@ class AppConstants {
     {'id': 'mars', 'name': 'Mars', 'emoji': '🔴', 'color': 0xFFEF4444, 'apiId': 'Mars'},
     {'id': 'jupiter', 'name': 'Jupiter', 'emoji': '🟠', 'color': 0xFFF97316, 'apiId': 'Jupiter'},
     {'id': 'saturn', 'name': 'Saturnus', 'emoji': '🪐', 'color': 0xFFD97706, 'apiId': 'Saturnus'},
-    {'id': 'uranus', 'name': 'Uranus', 'emoji': '🔵', 'color': 0xFF06B6D4, 'apiId': 'Uranus'},
-    {'id': 'neptune', 'name': 'Neptunus', 'emoji': '💙', 'color': 0xFF1D4ED8, 'apiId': 'Neptunus'},
+    {'id': 'uranus', 'name': 'Uranus', 'emoji': '🟢', 'color': 0xFF06B6D4, 'apiId': 'Uranus'},
+    {'id': 'neptune', 'name': 'Neptunus', 'emoji': '🔵', 'color': 0xFF1D4ED8, 'apiId': 'Neptunus'},
   ];
 
   // Data statis Rasi Bintang
@@ -42,20 +42,17 @@ class AppConstants {
 
   // Data statis Gerhana
   static final List<Map<String, dynamic>> gerhanaList = [
-    {'id': 'gerhana_0', 'name': 'Gerhana Matahari Total', 'emoji': '🌑', 'color': 0xFF111827, 'apiId': 'Gerhana_matahari'},
-    {'id': 'gerhana_1', 'name': 'Gerhana Matahari Sebagian', 'emoji': '🌒', 'color': 0xFFF97316, 'apiId': 'Gerhana_matahari'},
-    {'id': 'gerhana_2', 'name': 'Gerhana Matahari Cincin', 'emoji': '💍', 'color': 0xFFF59E0B, 'apiId': 'Gerhana_matahari'},
-    {'id': 'gerhana_3', 'name': 'Gerhana Bulan Total', 'emoji': '🌕', 'color': 0xFFB45309, 'apiId': 'Gerhana_bulan'},
-    {'id': 'gerhana_4', 'name': 'Gerhana Bulan Sebagian', 'emoji': '🌖', 'color': 0xFF6B7280, 'apiId': 'Gerhana_bulan'},
+    {'id': 'gerhana_0', 'name': 'Gerhana Matahari', 'emoji': '🌒', 'color': 0xFFF97316, 'apiId': 'Gerhana_matahari'},
+    {'id': 'gerhana_1', 'name': 'Gerhana Bulan', 'emoji': '🌕', 'color': 0xFFB45309, 'apiId': 'Gerhana_bulan'},
   ];
 
   // Data statis Galaksi
   static final List<Map<String, dynamic>> galaksiList = [
     {'id': 'galaksi_0', 'name': 'Bima Sakti', 'emoji': '🌌', 'color': 0xFF7C3AED, 'apiId': 'Bima_Sakti'},
-    {'id': 'galaksi_1', 'name': 'Andromeda (M31)', 'emoji': '🌀', 'color': 0xFF3B82F6, 'apiId': 'Galaksi_Andromeda'},
+    {'id': 'galaksi_1', 'name': 'Galaksi Andromeda', 'emoji': '🌀', 'color': 0xFF3B82F6, 'apiId': 'Galaksi_Andromeda'},
     {'id': 'galaksi_2', 'name': 'Awan Magellan Besar', 'emoji': '☁️', 'color': 0xFF10B981, 'apiId': 'Awan_Magellan_Besar'},
-    {'id': 'galaksi_3', 'name': 'Galaksi Pusaran Air (M51)', 'emoji': '🌊', 'color': 0xFF06B6D4, 'apiId': 'Galaksi_Pusaran_Air'},
-    {'id': 'galaksi_4', 'name': 'Galaksi Mata Hitam (M64)', 'emoji': '👁️', 'color': 0xFFEF4444, 'apiId': 'Galaksi_Mata_Hitam'},
+    {'id': 'galaksi_3', 'name': 'Galaksi Pusaran', 'emoji': '🌊', 'color': 0xFF06B6D4, 'apiId': 'Galaksi_Pusaran'},
+    {'id': 'galaksi_4', 'name': 'Galaksi Mata Hitam', 'emoji': '👁️', 'color': 0xFFEF4444, 'apiId': 'Galaksi_Mata_Hitam'},
   ];
 
   // Random facts
