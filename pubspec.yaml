@@ -66,4 +66,8 @@ flutter:
   uses-material-design: true
   assets:
     - assets/images/
+    - assets/images/rasi/
+    - assets/images/planets/ 
+    - assets/images/galaksi/  
+    - assets/images/gerhana/ 
     - assets/data/
