@@ -100,11 +100,9 @@ class GalaksiDetailScreen extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const SizedBox(height: 20),
-                    Center(child: _buildTypeTag(item.type)),
-                    const SizedBox(height: 35),
+                    
 
-                    _sectionTitle('🌌 Deskripsi Ilmiah'),
+                    _sectionTitle(' Deskripsi Ilmiah'),
                     const SizedBox(height: 12),
 
                     FutureBuilder<Map<String, dynamic>?>(
@@ -146,27 +144,6 @@ class GalaksiDetailScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildTypeTag(String type) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [AppTheme.auroraBlue.withOpacity(0.3), Colors.transparent],
-        ),
-        borderRadius: BorderRadius.circular(30),
-        border: Border.all(color: AppTheme.auroraBlue.withOpacity(0.5)),
-      ),
-      child: Text(
-        type.toUpperCase(),
-        style: const TextStyle(
-          color: AppTheme.auroraBlue, 
-          fontSize: 11, 
-          fontWeight: FontWeight.bold, 
-          letterSpacing: 2
-        ),
-      ),
-    );
-  }
 
   Widget _sectionTitle(String title) {
     return Row(

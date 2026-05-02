@@ -209,7 +209,7 @@ class _GalaksiListScreenState extends State<GalaksiListScreen> {
     final itemCount = filtered.isEmpty ? 0 : filtered.length + 1;
 
     return Scaffold(
-      appBar: AstroAppBar(title: '🌌 Galaksi'),
+      appBar: AstroAppBar(title: ' Galaksi'),
       body: StarBackground(
         child: _loading
             ? const Center(child: CircularProgressIndicator())
