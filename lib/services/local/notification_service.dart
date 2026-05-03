@@ -1,7 +1,10 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart'; 
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:timezone/timezone.dart' as tz;
 import 'package:timezone/data/latest.dart' as tz_data;
+import 'package:permission_handler/permission_handler.dart';
 
 class NotificationService {
   static final NotificationService instance = NotificationService._();
@@ -12,6 +15,18 @@ class NotificationService {
   Future<void> initialize() async {
     tz_data.initializeTimeZones();
     tz.setLocalLocation(tz.getLocation('Asia/Jakarta'));
+    // Request runtime notification permission on Android 13+ before initializing plugin
+    try {
+      if (Platform.isAndroid) {
+        final status = await Permission.notification.status;
+        if (!status.isGranted) {
+          await Permission.notification.request();
+        }
+      }
+    } catch (e) {
+      // ignore: avoid_print
+      print('Permission request error: $e');
+    }
 
     const android = AndroidInitializationSettings('@mipmap/ic_launcher');
     const ios = DarwinInitializationSettings(
