@@ -1,4 +1,3 @@
-// lib/services/api/currency_service.dart
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import '../../utils/constants.dart';
@@ -26,7 +25,7 @@ class CurrencyService {
         return _rates;
       }
     } catch (_) {}
-    // Fallback rates
+    
     return {
       'USD': 1.0,
       'IDR': 15800.0,

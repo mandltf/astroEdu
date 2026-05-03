@@ -133,7 +133,6 @@ class AuthService {
     final prefs = await SharedPreferences.getInstance();
     await prefs.clear();
   }
-  // Tambahkan di dalam class AuthService
 
   Future<bool> hasSavedSession() async {
     final prefs = await SharedPreferences.getInstance();

@@ -1,4 +1,3 @@
-// lib/views/widgets/star_background.dart
 import 'dart:math';
 import 'package:flutter/material.dart';
 

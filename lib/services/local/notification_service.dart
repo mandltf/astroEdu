@@ -1,5 +1,4 @@
-// lib/services/notification_service.dart
-import 'package:flutter/material.dart'; // ✅ tambahin ini
+import 'package:flutter/material.dart'; 
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:timezone/timezone.dart' as tz;
 import 'package:timezone/data/latest.dart' as tz_data;
@@ -25,7 +24,7 @@ class NotificationService {
   }
 
   Future<void> showInstantNotification(String title, String body) async {
-    final id = DateTime.now().millisecondsSinceEpoch ~/ 1000; // ✅ biar ga ketimpa
+    final id = DateTime.now().millisecondsSinceEpoch ~/ 1000; 
 
     const androidDetails = AndroidNotificationDetails(
       'astroedu_channel',
@@ -33,7 +32,7 @@ class NotificationService {
       channelDescription: 'Notifikasi fenomena astronomi dan pembelajaran',
       importance: Importance.high,
       priority: Priority.high,
-      color: Color(0xFF3B82F6), // ✅ sekarang aman
+      color: Color(0xFF3B82F6), 
     );
 
     const iosDetails = DarwinNotificationDetails();
@@ -65,7 +64,7 @@ class NotificationService {
   }
 
   Future<void> scheduleEclipseReminder(String eclipseName, DateTime date) async {
-    if (date.isBefore(DateTime.now())) return; // ✅ biar aman
+    if (date.isBefore(DateTime.now())) return; 
 
     const androidDetails = AndroidNotificationDetails(
       'astroedu_events',
@@ -79,7 +78,7 @@ class NotificationService {
 
     if (notifTime.isAfter(DateTime.now())) {
       await _plugin.zonedSchedule(
-        date.millisecondsSinceEpoch ~/ 1000, // ✅ id unik
+        date.millisecondsSinceEpoch ~/ 1000, 
         '🌑 Fenomena Langit Segera!',
         '$eclipseName akan terjadi dalam 1 jam! Siapkan teleskopmu!',
         tz.TZDateTime.from(notifTime, tz.local),

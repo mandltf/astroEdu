@@ -1,4 +1,3 @@
-// lib/views/screens/quiz/quiz_screen.dart
 import 'package:flutter/material.dart';
 import '../../../services/local/database_helper.dart';
 import '../../../utils/app_theme.dart';

@@ -1,6 +1,4 @@
-// lib/views/widgets/common_widgets.dart
 import 'package:flutter/material.dart';
-// import 'package:astroedu/utils/app_theme.dart';
 
 class GradientCard extends StatelessWidget {
   final Widget child;

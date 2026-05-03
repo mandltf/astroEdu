@@ -12,14 +12,8 @@ class GeminiService {
   Future<void> _init() async {
     if (_initialized) return;
     
-    // 🔥 Ganti dengan model yang tersedia di akunmu
-    // Pilihan: 
-    // - 'gemini-2.5-flash-lite' 
-    // - 'gemini-2.5-flash' 
-    // - 'gemini-2.0-flash-lite' 
-    // - 'gemini-2.0-flash'
     _model = GenerativeModel(
-      model: 'gemini-2.5-flash-lite',  // ✅ Paling direkomendasikan
+      model: 'gemini-2.5-flash-lite',  
       apiKey: AppConstants.geminiApiKey,
       generationConfig: GenerationConfig(
         temperature: 0.7,

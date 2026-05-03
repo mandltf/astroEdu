@@ -1,4 +1,3 @@
-// lib/views/screens/home/home_screen.dart
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
@@ -19,7 +18,6 @@ import '../rasi/rasi_list_screen.dart';
 import '../gerhana/gerhana_list_screen.dart';
 import '../galaksi/galaksi_list_screen.dart';
 import '../../../utils/timezone_helper.dart';
-// import '../buy_star/buy_star_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -176,11 +174,10 @@ class _HomeScreenState extends State<HomeScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const Text(
-                    '⏰ Waktu Terbaik Pengamatan:',
+                    ' Waktu Terbaik Pengamatan:',
                     style: TextStyle(color: AppTheme.solarGold, fontWeight: FontWeight.w600, fontSize: 13),
                   ),
                   const SizedBox(height: 8),
-                  // Tabel sederhana
                   _buildTimeRow('UTC', bestTimeUTC),
                   _buildTimeRow('London (BST)', bestTimeLondon),
                   _buildTimeRow('WIB (Jakarta)', bestTimeWIB),

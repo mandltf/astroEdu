@@ -1,4 +1,3 @@
-// lib/views/screens/ai/astrobot_screen.dart
 import 'package:flutter/material.dart';
 import '../../../services/api/gemini_service.dart';
 import '../../../services/local/auth_service.dart';

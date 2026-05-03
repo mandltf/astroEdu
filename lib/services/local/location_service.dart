@@ -1,4 +1,3 @@
-// lib/services/location_service.dart
 import 'package:geolocator/geolocator.dart';
 
 class LocationService {
@@ -28,10 +27,8 @@ class LocationService {
     }
   }
 
-  // Get recommended constellation based on location and time
 
   String getLocationName(double lat, double lng) {
-    // Simple approximation for Indonesian cities
     if (lat >= -8.5 && lat <= -6.0 && lng >= 106.0 && lng <= 107.5) return 'Jakarta';
     if (lat >= -8.0 && lat <= -6.8 && lng >= 107.0 && lng <= 108.8) return 'Bandung';
     if (lat >= -8.5 && lat <= -6.7 && lng >= 110.0 && lng <= 111.5) return 'Yogyakarta';

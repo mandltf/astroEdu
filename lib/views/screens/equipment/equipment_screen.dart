@@ -86,7 +86,7 @@ class _EquipmentScreenState extends State<EquipmentScreen> {
         return 'Rp ${value.toStringAsFixed(0)}';
 
       case 'EUR':
-        final rate = _rates['EUR'] ?? 0.92; // fallback aman
+        final rate = _rates['EUR'] ?? 0.92; 
         final value = usdPrice * rate;
         return '€${value.toStringAsFixed(2)}';
 

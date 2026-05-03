@@ -31,7 +31,7 @@ class _CatchStarGameState extends State<CatchStarGame> {
   int _lives = 5;
 
   bool _isGameStarted = false;
-  bool _isDialogVisible = true; // Langsung true untuk nampilin intro
+  bool _isDialogVisible = true; 
   bool _isGameOver = false;
   bool _isWin = false;
 
@@ -127,7 +127,7 @@ class _CatchStarGameState extends State<CatchStarGame> {
       double starLeft = star.x * (_screenWidth - _starSize);
       double starTop = star.y * (_screenHeight - _starSize);
       double blackLeft = _actualLeft;
-      double blackTop = _screenHeight - _blackHoleSize - 100; // Penyesuaian posisi agar tidak tertutup nav
+      double blackTop = _screenHeight - _blackHoleSize - 100; 
 
       bool hit = (starLeft < blackLeft + _blackHoleSize &&
           starLeft + _starSize > blackLeft &&
@@ -178,7 +178,6 @@ class _CatchStarGameState extends State<CatchStarGame> {
     super.dispose();
   }
 
-  // WIDGET DIALOG CUSTOM (Dibuat di dalam Stack Body)
   Widget _buildOverlayDialog() {
     String title = !_isGameStarted 
         ? '🕳️ BLACK HOLE GAME 🕳️' 
@@ -276,7 +275,6 @@ class _CatchStarGameState extends State<CatchStarGame> {
           if (_isDialogVisible) _buildOverlayDialog(),
         ],
       ),
-      // Bottom nav bar kamu di sini tetap akan terlihat karena berada di luar Stack 'body'
     );
   }
 }

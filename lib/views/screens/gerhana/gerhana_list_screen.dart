@@ -4,7 +4,6 @@ import '../../../services/local/auth_service.dart';
 import '../../../utils/app_theme.dart';
 import '../../../utils/constants.dart';
 import '../../../models/gerhana_model.dart';
-// import '../../../controllers/data_controller.dart';
 import '../../widgets/star_background.dart';
 import '../../widgets/common_widgets.dart';
 import '../quiz/quiz_screen.dart';

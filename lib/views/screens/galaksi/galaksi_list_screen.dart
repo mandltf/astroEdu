@@ -164,7 +164,7 @@ class _GalaksiListScreenState extends State<GalaksiListScreen> {
                   Row(
                     children: [
                       Text(
-                        '🎯 Kuis Galaksi',
+                        ' Kuis Galaksi',
                         style: TextStyle(
                           color: unlocked ? AppTheme.starlight : const Color(0xFF6B7280),
                           fontSize: 16,

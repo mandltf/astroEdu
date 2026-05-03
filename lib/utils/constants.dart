@@ -1,4 +1,3 @@
-// lib/utils/constants.dart
 class AppConstants {
   // Gemini API Key - ganti dengan API key kamu
   static const String geminiApiKey = 'AIzaSyA6UKhLRegc9KYcl1HDLwh-UVZBoOyMH8M';

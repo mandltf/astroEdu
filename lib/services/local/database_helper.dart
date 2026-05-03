@@ -68,19 +68,6 @@ class DatabaseHelper {
     ''');
 
     await db.execute('''
-      CREATE TABLE bought_stars (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        user_id INTEGER NOT NULL,
-        star_name TEXT NOT NULL,
-        custom_name TEXT NOT NULL,
-        price_usd REAL NOT NULL,
-        price_idr REAL NOT NULL,
-        bought_at TEXT NOT NULL,
-        FOREIGN KEY (user_id) REFERENCES users (id)
-      )
-    ''');
-
-    await db.execute('''
       CREATE TABLE saran_kesan (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         user_id INTEGER NOT NULL,
@@ -214,18 +201,6 @@ class DatabaseHelper {
   Future<void> clearChatHistory(int userId) async {
     final db = await database;
     await db.delete('chat_history', where: 'user_id = ?', whereArgs: [userId]);
-  }
-
-  // BOUGHT STARS
-  Future<int> insertStar(Map<String, dynamic> star) async {
-    final db = await database;
-    return await db.insert('bought_stars', star);
-  }
-
-  Future<List<Map<String, dynamic>>> getBoughtStars(int userId) async {
-    final db = await database;
-    return await db.query('bought_stars',
-        where: 'user_id = ?', whereArgs: [userId], orderBy: 'bought_at DESC');
   }
 
   // SARAN KESAN

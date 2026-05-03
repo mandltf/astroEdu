@@ -1,4 +1,3 @@
-// lib/main.dart
 import 'package:flutter/material.dart';
 import 'views/screens/auth/login_screen.dart';
 import 'utils/app_theme.dart';

@@ -1,4 +1,3 @@
-// lib/views/screens/auth/register_screen.dart
 import 'package:flutter/material.dart';
 import '../../../services/local/auth_service.dart';
 import '../../../utils/app_theme.dart';

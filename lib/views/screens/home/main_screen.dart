@@ -1,4 +1,3 @@
-// lib/views/screens/home/main_screen.dart
 import 'package:flutter/material.dart';
 import '../../../utils/app_theme.dart';
 import 'home_screen.dart';

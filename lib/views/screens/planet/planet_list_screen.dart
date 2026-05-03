@@ -1,4 +1,3 @@
-// lib/views/screens/planet/planet_list_screen.dart
 import 'package:flutter/material.dart';
 import '../../../services/local/database_helper.dart';
 import '../../../services/local/auth_service.dart';
