@@ -5,6 +5,7 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:timezone/timezone.dart' as tz;
 import 'package:timezone/data/latest.dart' as tz_data;
 import 'package:permission_handler/permission_handler.dart';
+import 'fenomena_service.dart';
 
 class NotificationService {
   static final NotificationService instance = NotificationService._();
@@ -57,6 +58,14 @@ class NotificationService {
   }
 
   Future<void> scheduleDailyReminder() async {
+    final fenomena = await FenomenaService.instance.getFenomenaHariIni();
+    final title = fenomena != null
+        ? '🔭 Fenomena Hari Ini: ${fenomena.nama}'
+        : '🌟 Waktunya Belajar Astronomi!';
+    final body = fenomena != null
+        ? 'Jangan lewatkan ${fenomena.nama}. Buka AstroEdu untuk detail waktu pengamatan.'
+        : 'Cek fenomena langit malam ini dan baca materi terbaru di AstroEdu';
+
     const androidDetails = AndroidNotificationDetails(
       'astroedu_daily',
       'AstroEdu Daily',
@@ -67,8 +76,8 @@ class NotificationService {
 
     await _plugin.zonedSchedule(
       1,
-      '🌟 Waktunya Belajar Astronomi!',
-      'Cek fenomena langit malam ini dan baca materi terbaru di AstroEdu',
+      title,
+      body,
       _nextInstanceOfTime(20, 0),
       details,
       androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
