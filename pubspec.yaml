@@ -21,6 +21,7 @@ dependencies:
   
   # HTTP & API
   http: ^1.1.0
+  flutter_dotenv: ^5.1.0
   
   # Location
   geolocator: ^11.0.0
@@ -66,6 +67,7 @@ dev_dependencies:
 flutter:
   uses-material-design: true
   assets:
+    - .env
     - assets/images/
     - assets/images/rasi/
     - assets/images/planets/ 

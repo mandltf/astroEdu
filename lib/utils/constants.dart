@@ -1,13 +1,11 @@
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+
 class AppConstants {
-  // Gemini API Key - ganti dengan API key kamu
-  static const String geminiApiKey = 'AIzaSyA6UKhLRegc9KYcl1HDLwh-UVZBoOyMH8M';
+  // Gemini API Key - dibaca dari .env file
+  static String get geminiApiKey => dotenv.env['GEMINI_API_KEY'] ?? 'AIzaSyA6UKhLRegc9KYcl1HDLwh-UVZBoOyMH8M';
   
   // Currency API
   static const String currencyApiUrl = 'https://api.exchangerate-api.com/v4/latest/USD';
-  
-  // NASA API
-  static const String nasaApiKey = 'DEMO_KEY';
-  static const String nasaApodUrl = 'https://api.nasa.gov/planetary/apod';
   
   // Wikipedia API
   static const String wikipediaApiUrl = 'https://id.wikipedia.org/api/rest_v1/page/summary/';

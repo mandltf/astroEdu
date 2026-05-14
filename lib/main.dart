@@ -1,10 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'views/screens/auth/login_screen.dart';
 import 'utils/app_theme.dart';
 import 'services/local/notification_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  
+  // Load environment variables
+  await dotenv.load();
+  
   await NotificationService.instance.initialize();
   runApp(const AstroEduApp());
 }
