@@ -50,16 +50,22 @@ AstroEdu adalah aplikasi mobile pembelajaran astronomi berbasis Flutter yang dir
    ```bash
    git clone https://github.com/username/astroedu.git
    cd astroedu
+   ```
 2. **Install Dependensi**
    ```bash
    flutter pub get
+   ```
 3. **Siapkan API Key**
-   - Buka lib/utils/constants.dart dan ganti nilai geminiApiKey dengan API key Anda dari [Google AI Studio](https://aistudio.google.com/welcome?utm_source=google&utm_medium=cpc&utm_campaign=Cloud-SS-DR-AIS-FY26-global-gsem-1713578&utm_content=text-ad&utm_term=KW_google%20ai%20studio&gad_source=1&gad_campaignid=23417416052&gbraid=0AAAAACn9t64vAWHYGkJxmhedFgB_pswQz&gclid=CjwKCAjw5NvPBhAoEiwA_2egfhWP2nfU1Bh_UHW-B1ZH2bqWIAJd48Q_-EIr7c5KtSJlOLONpKoHGBoCB8oQAvD_BwE)
-   ```bash
-   static const String geminiApiKey = 'YOUR_API_KEY_HERE';
+   - Isi file `.env` di root project dengan API key dari [Google AI Studio](https://aistudio.google.com/welcome?utm_source=google&utm_medium=cpc&utm_campaign=Cloud-SS-DR-AIS-FY26-global-gsem-1713578&utm_content=text-ad&utm_term=KW_google%20ai%20studio&gad_source=1&gad_campaignid=23417416052&gbraid=0AAAAACn9t64vAWHYGkJxmhedFgB_pswQz&gclid=CjwKCAjw5NvPBhAoEiwA_2egfhWP2nfU1Bh_UHW-B1ZH2bqWIAJd48Q_-EIr7c5KtSJlOLONpKoHGBoCB8oQAvD_BwE)
+   - Format:
+   ```env
+   GEMINI_API_KEY=your_api_key_here
+   ```
+   - Setelah mengubah `.env`, lakukan full restart aplikasi, bukan hot reload.
 4. **Jalankan aplikasi**
    ```bash
    flutter run
+   ```
 
 ## 📁 Struktur Folder
 ```text

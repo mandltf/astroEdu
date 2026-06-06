@@ -2,7 +2,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class AppConstants {
   // Gemini API Key - dibaca dari .env file
-  static String get geminiApiKey => dotenv.env['GEMINI_API_KEY'] ?? 'AIzaSyA6UKhLRegc9KYcl1HDLwh-UVZBoOyMH8M';
+  static String get geminiApiKey => dotenv.env['GEMINI_API_KEY']?.trim() ?? '';
   
   // Currency API
   static const String currencyApiUrl = 'https://api.exchangerate-api.com/v4/latest/USD';

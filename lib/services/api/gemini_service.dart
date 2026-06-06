@@ -26,10 +26,12 @@ class GeminiService {
   Future<String> sendMessage(
     List<Map<String, String>> conversationHistory,
     String newMessage) async {
-    
+
+    final apiKey = AppConstants.geminiApiKey;
+
     // Cek API key
-    if (AppConstants.geminiApiKey.isEmpty ||
-        AppConstants.geminiApiKey == 'YOUR_GEMINI_API_KEY') {
+    if (apiKey.isEmpty) {
+      if (kDebugMode) print('⚠️ GEMINI_API_KEY kosong. Periksa file .env dan full restart app.');
       return _getOfflineResponse(newMessage);
     }
 
