@@ -17,7 +17,13 @@ class DatabaseHelper {
   Future<Database> _initDB(String filePath) async {
     final dbPath = await getDatabasesPath();
     final path = join(dbPath, filePath);
-    return await openDatabase(path, version: 1, onCreate: _createDB);
+    return await openDatabase(path, version: 2, onCreate: _createDB, onUpgrade: _upgradeDB);
+  }
+
+  Future _upgradeDB(Database db, int oldVersion, int newVersion) async {
+    if (oldVersion < 2) {
+      await db.execute('ALTER TABLE fenomena ADD COLUMN negara TEXT DEFAULT "Indonesia"');
+    }
   }
 
   Future _createDB(Database db, int version) async {
@@ -87,7 +93,8 @@ class DatabaseHelper {
         deskripsi_lengkap TEXT NOT NULL,
         poin_pelajaran TEXT NOT NULL,
         sumber TEXT NOT NULL,
-        waktu_terbaik_utc TEXT NOT NULL
+        waktu_terbaik_utc TEXT NOT NULL,
+        negara TEXT DEFAULT 'Indonesia'
       )
     ''');
   }

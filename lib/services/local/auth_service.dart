@@ -94,7 +94,7 @@ class AuthService {
       }
 
       // Cek apakah ada session sebelumnya (user sudah pernah login)
-      final userId = await getCurrentUserId();
+      final userId = await getLastUserId();
       if (userId == null) {
         print('No existing session');
         return false;
@@ -109,7 +109,11 @@ class AuthService {
         ),
       );
       
-      return authenticated;
+      if (authenticated) {
+        await _saveSession(userId);
+        return true;
+      }
+      return false;
     } catch (e) {
       print('Biometric auth error: $e');
       return false;
@@ -119,6 +123,7 @@ class AuthService {
   Future<void> _saveSession(int userId) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setInt('user_id', userId);
+    await prefs.setInt('last_user_id', userId);
     await prefs.setBool('is_logged_in', true);
   }
 
@@ -129,9 +134,25 @@ class AuthService {
     return prefs.getInt('user_id');
   }
 
+  Future<int?> getLastUserId() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getInt('last_user_id');
+  }
+
   Future<void> logout() async {
     final prefs = await SharedPreferences.getInstance();
-    await prefs.clear();
+    await prefs.remove('user_id');
+    await prefs.setBool('is_logged_in', false);
+  }
+
+  Future<bool> isBiometricEnabledForUser(int userId) async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getBool('biometric_enabled_$userId') ?? false;
+  }
+
+  Future<void> setBiometricEnabledForUser(int userId, bool enabled) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('biometric_enabled_$userId', enabled);
   }
 
   Future<bool> hasSavedSession() async {

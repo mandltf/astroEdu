@@ -26,22 +26,36 @@ class HomeScreen extends StatefulWidget {
   State<HomeScreen> createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> {
+class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   Map<String, dynamic>? _user;
   String _fact = '';
   FenomenaModel? _fenomenaHariIni;
   bool _loadingFenomena = true;
   Position? _position;
   bool _loadingLocation = true;
+  bool _waitingForSettings = false;
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _loadData();
-    _loadLocation();
-    _loadFenomenaHariIni();
-    _scheduleDailyNotif();
+    _loadLocationAndFenomena();
     _refreshFact();
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed && _waitingForSettings) {
+      _waitingForSettings = false;
+      _loadLocationAndFenomena();
+    }
   }
 
   @override
@@ -57,29 +71,43 @@ class _HomeScreenState extends State<HomeScreen> {
     if (mounted) setState(() {_user = user;});
   }
 
-  Future<void> _loadLocation() async {
+  Future<void> _loadLocationAndFenomena() async {
+    setState(() {
+      _loadingLocation = true;
+      _loadingFenomena = true;
+    });
+
+    // Pre-seed database DAN ambil GPS secara paralel
+    final seedFuture = FenomenaService.instance.semuaFenomena; // triggers seed
+    
     try {
       final pos = await LocationService.instance.getCurrentPosition();
-      if (mounted) {
-        setState(() {
-          _position = pos;
-          _loadingLocation = false;
-        });
-      }
+      if (mounted) setState(() => _position = pos);
     } catch (e) {
-      if (mounted) {
-        setState(() {
-          _position = null;
-          _loadingLocation = false;
-        });
-      }
+      if (mounted) setState(() => _position = null);
     }
+
+    if (mounted) setState(() => _loadingLocation = false);
+
+    await seedFuture; // pastikan seed selesai
+    await _loadFenomenaHariIni();
+    await _scheduleNotifications();
   }
 
   Future<void> _loadFenomenaHariIni() async {
-    setState(() => _loadingFenomena = true);
-    await Future.delayed(const Duration(milliseconds: 200));
-    final fenomena = await FenomenaService.instance.getFenomenaHariIni();
+    if (_position == null) {
+      if (mounted) {
+        setState(() {
+          _fenomenaHariIni = null;
+          _loadingFenomena = false;
+        });
+      }
+      return;
+    }
+
+    final negara = await LocationService.instance.getCountryName(_position!.latitude, _position!.longitude);
+    final fenomena = await FenomenaService.instance.getFenomenaHariIni(negara);
+    
     if (mounted) {
       setState(() {
         _fenomenaHariIni = fenomena;
@@ -88,8 +116,9 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
-  Future<void> _scheduleDailyNotif() async {
-    await NotificationService.instance.scheduleDailyReminder();
+  Future<void> _scheduleNotifications() async {
+    await NotificationService.instance.scheduleDailyReminder(position: _position);
+    await NotificationService.instance.scheduleAstronomyReminders(position: _position);
   }
 
   void _refreshFact() {
@@ -101,31 +130,28 @@ class _HomeScreenState extends State<HomeScreen> {
   Future<void> _requestLocationPermission() async {
     bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
     if (!serviceEnabled) {
+      _waitingForSettings = true;
       await Geolocator.openLocationSettings();
-      await _loadLocation();
       return;
     }
     LocationPermission permission = await Geolocator.checkPermission();
     if (permission == LocationPermission.denied) {
       permission = await Geolocator.requestPermission();
       if (permission == LocationPermission.denied) {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Izin lokasi diperlukan untuk fitur ini'), backgroundColor: AppTheme.marsRed),
-          );
-        }
+        // Ditolak sekali, buka app settings agar user bisa aktifkan manual
+        _waitingForSettings = true;
+        await Geolocator.openAppSettings();
         return;
       }
     }
     if (permission == LocationPermission.deniedForever) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Izin lokasi ditolak permanen, silakan aktifkan di pengaturan'), backgroundColor: AppTheme.marsRed),
-        );
-      }
+      // Ditolak permanen, buka app settings
+      _waitingForSettings = true;
+      await Geolocator.openAppSettings();
       return;
     }
-    await _loadLocation();
+    // Izin diberikan langsung
+    await _loadLocationAndFenomena();
   }
 
   void _showDetailFenomenaDialog(
@@ -256,8 +282,7 @@ Widget _buildTimeRow(String zona, String waktu) {
           child: RefreshIndicator(
             onRefresh: () async {
               await _loadData();
-              await _loadLocation();
-              await _loadFenomenaHariIni();
+              await _loadLocationAndFenomena();
             },
             color: AppTheme.auroraBlue,
             backgroundColor: AppTheme.cardBg,
@@ -333,7 +358,39 @@ Widget _buildTimeRow(String zona, String waktu) {
   if (_loadingFenomena) {
     return const Center(child: CircularProgressIndicator());
   }
-  
+  if (_position == null) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: AppTheme.cardBg,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: AppTheme.marsRed.withOpacity(0.5)),
+      ),
+      child: Column(
+        children: [
+          const Icon(Icons.location_off, color: AppTheme.marsRed, size: 40),
+          const SizedBox(height: 12),
+          const Text('Lokasi Tidak Aktif',
+              style: TextStyle(color: AppTheme.starlight, fontSize: 16, fontWeight: FontWeight.bold)),
+          const SizedBox(height: 8),
+          const Text('Aktifkan lokasi untuk melihat fenomena astronomi yang terlihat dari tempatmu.',
+              textAlign: TextAlign.center,
+              style: TextStyle(color: Color(0xFF9CA3AF), fontSize: 12)),
+          const SizedBox(height: 16),
+          ElevatedButton(
+            onPressed: _requestLocationPermission,
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppTheme.auroraBlue,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            ),
+            child: const Text('Aktifkan Lokasi'),
+          ),
+        ],
+      ),
+    );
+  }
+
   final fenomena = _fenomenaHariIni;
   if (fenomena == null) {
     return Container(
@@ -349,12 +406,7 @@ Widget _buildTimeRow(String zona, String waktu) {
   }
 
   // --- LOGIKA LOKASI ---
-  String city = '';
-  if (_position != null) {
-    city = LocationService.instance.getLocationName(_position!.latitude, _position!.longitude);
-  } else {
-    city = 'Lokasi Anda';
-  }
+  String city = LocationService.instance.getLocationName(_position!.latitude, _position!.longitude);
 
   // --- LOGIKA IKON OTOMATIS ---
   String emoji = '🌟'; // Default

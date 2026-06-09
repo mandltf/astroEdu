@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:local_auth/local_auth.dart';
 import '../../../services/local/auth_service.dart';
 import '../../../services/local/database_helper.dart';
 import '../../../utils/app_theme.dart';
@@ -13,21 +14,26 @@ class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
 
   @override
-  State<ProfileScreen> createState() => _ProfileScreenState();
+  State<ProfileScreen> createState() => ProfileScreenState();
 }
 
-class _ProfileScreenState extends State<ProfileScreen> with WidgetsBindingObserver {
+class ProfileScreenState extends State<ProfileScreen> with WidgetsBindingObserver {
   Map<String, dynamic>? _user;
   List<Map<String, dynamic>> _quizScores = [];
+  int _totalAttempts = 0;
+  int _uniqueQuizzes = 0;
+  double _averageScore = 0.0;
   String _saran = '';
   String _kesan = '';
   bool _loading = true;
+  bool _biometricEnabled = false;
+  bool _deviceSupportsBiometric = false;
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
-    _loadProfile();
+    loadProfile();
   }
 
   @override
@@ -40,17 +46,17 @@ class _ProfileScreenState extends State<ProfileScreen> with WidgetsBindingObserv
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed) {
       // Reload profile setiap kali app kembali ke foreground (dari quiz, screen lain, dll)
-      _loadProfile();
+      loadProfile();
     }
   }
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    _loadProfile();
+    loadProfile();
   }
 
-  Future<void> _loadProfile() async {
+  Future<void> loadProfile() async {
     final userId = await AuthService.instance.getCurrentUserId();
     if (userId == null) {
       setState(() {
@@ -61,34 +67,57 @@ class _ProfileScreenState extends State<ProfileScreen> with WidgetsBindingObserv
     }
     final user = await DatabaseHelper.instance.getUserById(userId);
     final scores = await DatabaseHelper.instance.getQuizScores(userId);
+    
+    int attempts = scores.length;
+    Map<String, Map<String, dynamic>> latestScoresMap = {};
+    for (var score in scores) {
+      String cat = score['category'];
+      if (!latestScoresMap.containsKey(cat)) {
+        latestScoresMap[cat] = score;
+      }
+    }
+    
+    int uniqueQuizzes = latestScoresMap.length;
+    double avgScore = 0.0;
+    if (uniqueQuizzes > 0) {
+      double totalPercent = 0.0;
+      for (var score in latestScoresMap.values) {
+        int correct = score['score'];
+        int total = score['total'];
+        if (total > 0) {
+          totalPercent += (correct / total) * 100;
+        }
+      }
+      avgScore = totalPercent / uniqueQuizzes;
+    }
+
     final sk = await DatabaseHelper.instance.getSaranKesan(userId);
+
+    final available = await AuthService.instance.isBiometricAvailable();
+    bool enabled = false;
+    if (available) {
+      enabled = await AuthService.instance.isBiometricEnabledForUser(userId);
+    }
+
     setState(() {
       _user = user;
       _quizScores = scores;
+      _totalAttempts = attempts;
+      _uniqueQuizzes = uniqueQuizzes;
+      _averageScore = avgScore;
       _saran = sk?['saran'] ?? '';
       _kesan = sk?['kesan'] ?? '';
+      _deviceSupportsBiometric = available;
+      _biometricEnabled = enabled;
       _loading = false;
     });
-  }
-
-  double _getAverageScore() {
-    if (_quizScores.isEmpty) return 0.0;
-    double totalPercent = 0.0;
-    for (var score in _quizScores) {
-      int correct = score['score'];
-      int total = score['total'];
-      if (total > 0) {
-        totalPercent += (correct / total) * 100;
-      }
-    }
-    return totalPercent / _quizScores.length;
   }
 
   Future<void> _updateUserField(String field, String newValue) async {
     final userId = _user?['id'];
     if (userId == null) return;
     await DatabaseHelper.instance.updateUser(userId, {field: newValue});
-    await _loadProfile();
+    await loadProfile();
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('$field berhasil diubah'), backgroundColor: AppTheme.nebulaGreen),
@@ -102,10 +131,56 @@ class _ProfileScreenState extends State<ProfileScreen> with WidgetsBindingObserv
     if (pickedFile != null) {
       final userId = _user!['id'];
       await DatabaseHelper.instance.updateUser(userId, {'photo_path': pickedFile.path});
-      await _loadProfile();
+      await loadProfile();
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Foto profil diperbarui'), backgroundColor: AppTheme.nebulaGreen),
       );
+    }
+  }
+
+  Future<void> _toggleBiometric(bool value) async {
+    if (value) {
+      final LocalAuthentication localAuth = LocalAuthentication();
+      try {
+        final authenticated = await localAuth.authenticate(
+          localizedReason: 'Verifikasi identitas untuk mengaktifkan biometrik',
+          options: const AuthenticationOptions(
+            stickyAuth: true,
+            biometricOnly: true,
+          ),
+        );
+        if (!authenticated) {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Autentikasi gagal'), backgroundColor: AppTheme.marsRed),
+            );
+          }
+          return;
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Terjadi kesalahan biometrik'), backgroundColor: AppTheme.marsRed),
+          );
+        }
+        return;
+      }
+    }
+    
+    final userId = _user?['id'];
+    if (userId != null) {
+      await AuthService.instance.setBiometricEnabledForUser(userId, value);
+      setState(() {
+        _biometricEnabled = value;
+      });
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(value ? 'Biometrik diaktifkan' : 'Biometrik dinonaktifkan'), 
+            backgroundColor: AppTheme.nebulaGreen
+          ),
+        );
+      }
     }
   }
 
@@ -220,8 +295,6 @@ class _ProfileScreenState extends State<ProfileScreen> with WidgetsBindingObserv
       );
     }
 
-    final avgScore = _getAverageScore();
-
     return Scaffold(
       appBar: AstroAppBar(title: 'Profil Saya'),
       body: StarBackground(
@@ -272,8 +345,9 @@ class _ProfileScreenState extends State<ProfileScreen> with WidgetsBindingObserv
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceAround,
                   children: [
-                    _statItem('Jumlah Kuis', _quizScores.length),
-                    _statItem('Rata-rata Nilai', avgScore.round()),
+                    _statItem('Jumlah Kuis', _uniqueQuizzes),
+                    _statItem('Percobaan', _totalAttempts),
+                    _statItem('Rata-rata Nilai', _averageScore.round()),
                   ],
                 ),
               ),
@@ -286,7 +360,7 @@ class _ProfileScreenState extends State<ProfileScreen> with WidgetsBindingObserv
                   Navigator.push(
                     context,
                     MaterialPageRoute(builder: (_) => const EditProfileScreen()),
-                  ).then((_) => _loadProfile()); // refresh setelah kembali
+                  ).then((_) => loadProfile()); // refresh setelah kembali
                 },
               ),
               _menuTile(
@@ -301,6 +375,19 @@ class _ProfileScreenState extends State<ProfileScreen> with WidgetsBindingObserv
                 onTap: _showKesanDialog,
                 trailing: _kesan.isNotEmpty ? Text(_kesan.length > 30 ? '${_kesan.substring(0, 30)}...' : _kesan, style: const TextStyle(color: AppTheme.nebulaGreen, fontSize: 12)) : null,
               ),
+              if (_deviceSupportsBiometric)
+                Card(
+                  margin: const EdgeInsets.only(bottom: 8),
+                  color: AppTheme.cardBg,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  child: SwitchListTile(
+                    title: const Text('Login dengan Biometrik', style: TextStyle(color: AppTheme.starlight)),
+                    secondary: const Icon(Icons.fingerprint, color: AppTheme.auroraBlue),
+                    activeColor: AppTheme.nebulaGreen,
+                    value: _biometricEnabled,
+                    onChanged: _toggleBiometric,
+                  ),
+                ),
               _menuTile(
                 icon: Icons.logout,
                 title: 'Logout',

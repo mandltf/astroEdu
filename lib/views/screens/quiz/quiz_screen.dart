@@ -1,8 +1,10 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import '../../../services/local/database_helper.dart';
 import '../../../utils/app_theme.dart';
 import '../../widgets/star_background.dart';
 import '../../widgets/common_widgets.dart';
+import '../home/main_screen.dart';
 
 class QuizScreen extends StatefulWidget {
   final String category;
@@ -27,10 +29,79 @@ class _QuizScreenState extends State<QuizScreen> {
   int? _selectedOption;
   bool _answered = false;
 
+  bool _isQuizStarted = false;
+  List<Map<String, dynamic>> _history = [];
+  bool _loadingHistory = true;
+
+  Timer? _timer;
+  int _timeLeft = 30;
+
   @override
   void initState() {
     super.initState();
+    _checkHistory();
+  }
+
+  Future<void> _checkHistory() async {
+    final scores = await DatabaseHelper.instance.getQuizScores(widget.userId);
+    final categoryScores = scores.where((s) => s['category'] == widget.category).toList();
+    if (categoryScores.isEmpty) {
+      _startQuiz();
+    } else {
+      setState(() {
+        _history = categoryScores;
+        _loadingHistory = false;
+      });
+    }
+  }
+
+  void _startQuiz() {
     _generateQuestions();
+    setState(() {
+      _isQuizStarted = true;
+      _timeLeft = 30;
+    });
+    _startTimer();
+  }
+
+  void _startTimer() {
+    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (_timeLeft > 0) {
+        setState(() {
+          _timeLeft--;
+        });
+      } else {
+        _timer?.cancel();
+        _onTimeUp();
+      }
+    });
+  }
+
+  void _onTimeUp() {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => AlertDialog(
+        backgroundColor: AppTheme.cardBg,
+        title: const Text('Waktu Habis!', style: TextStyle(color: AppTheme.marsRed)),
+        content: const Text('Waktu pengerjaan kuis telah habis.', style: TextStyle(color: AppTheme.starlight)),
+        actions: [
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(context);
+              _finishQuiz(isTimeUp: true);
+            },
+            child: const Text('Lanjut'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    super.dispose();
   }
 
   void _generateQuestions() {
@@ -258,7 +329,8 @@ class _QuizScreenState extends State<QuizScreen> {
     }
   }
 
-  Future<void> _finishQuiz() async {
+  Future<void> _finishQuiz({bool isTimeUp = false}) async {
+    _timer?.cancel();
     await DatabaseHelper.instance.insertQuizScore({
       'user_id': widget.userId,
       'category': widget.category,
@@ -266,7 +338,20 @@ class _QuizScreenState extends State<QuizScreen> {
       'total': _questions.length,
       'played_at': DateTime.now().toIso8601String(),
     });
-    _showResultDialog();
+    
+    if (isTimeUp) {
+      _goToProfile();
+    } else {
+      _showResultDialog();
+    }
+  }
+
+  void _goToProfile() {
+    Navigator.pushAndRemoveUntil(
+      context,
+      MaterialPageRoute(builder: (_) => const MainScreen(initialIndex: 3)),
+      (route) => false,
+    );
   }
 
   void _showResultDialog() {
@@ -305,17 +390,71 @@ class _QuizScreenState extends State<QuizScreen> {
           ElevatedButton(
             onPressed: () {
               Navigator.pop(context);
-              Navigator.pop(context);
+              _goToProfile();
             },
-            child: const Text('Selesai'),
+            child: const Text('Selesai & Lihat Profil'),
           ),
         ],
       ),
     );
   }
 
+  Widget _buildPreQuizScreen() {
+    final latestScore = _history.first;
+    return Scaffold(
+      appBar: AstroAppBar(title: 'Persiapan Kuis'),
+      body: StarBackground(
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Icon(Icons.history, size: 80, color: AppTheme.auroraBlue),
+              const SizedBox(height: 24),
+              const Text('Anda sudah pernah mengerjakan kuis ini.', textAlign: TextAlign.center, style: TextStyle(color: AppTheme.starlight, fontSize: 18)),
+              const SizedBox(height: 16),
+              Text('Skor Terakhir: ${latestScore['score']} / ${latestScore['total']}', style: const TextStyle(color: AppTheme.nebulaGreen, fontSize: 24, fontWeight: FontWeight.bold)),
+              const SizedBox(height: 32),
+              ElevatedButton(
+                onPressed: _startQuiz,
+                style: ElevatedButton.styleFrom(minimumSize: const Size(double.infinity, 50)),
+                child: const Text('Ulangi Lagi (Timer 30s)'),
+              ),
+              const SizedBox(height: 32),
+              const Text('Riwayat Percobaan:', style: TextStyle(color: AppTheme.starlight, fontSize: 16, fontWeight: FontWeight.bold)),
+              const SizedBox(height: 8),
+              Expanded(
+                child: ListView.builder(
+                  itemCount: _history.length,
+                  itemBuilder: (context, index) {
+                    final item = _history[index];
+                    final attemptNum = _history.length - index;
+                    return Card(
+                      color: AppTheme.cardBg,
+                      child: ListTile(
+                        leading: CircleAvatar(backgroundColor: AppTheme.auroraBlue, child: Text('$attemptNum', style: const TextStyle(color: Colors.white))),
+                        title: Text('Skor: ${item['score']} / ${item['total']}', style: const TextStyle(color: AppTheme.starlight)),
+                        subtitle: Text('Waktu: ${item['played_at'].toString().split('T')[0]}', style: const TextStyle(color: Color(0xFF9CA3AF))),
+                      ),
+                    );
+                  },
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
+    if (!_isQuizStarted) {
+      if (_loadingHistory) {
+        return const Scaffold(body: Center(child: CircularProgressIndicator()));
+      }
+      return _buildPreQuizScreen();
+    }
     if (_questions.isEmpty) {
       return Scaffold(
         appBar: AstroAppBar(title: 'Kuis ${widget.category.toUpperCase()}'),
@@ -336,9 +475,24 @@ class _QuizScreenState extends State<QuizScreen> {
                 valueColor: const AlwaysStoppedAnimation<Color>(AppTheme.auroraBlue),
               ),
               const SizedBox(height: 8),
-              Text(
-                'Soal ${_currentIndex + 1} / ${_questions.length}',
-                style: const TextStyle(color: Color(0xFF9CA3AF)),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    'Soal ${_currentIndex + 1} / ${_questions.length}',
+                    style: const TextStyle(color: Color(0xFF9CA3AF)),
+                  ),
+                  Row(
+                    children: [
+                      const Icon(Icons.timer, color: AppTheme.marsRed, size: 16),
+                      const SizedBox(width: 4),
+                      Text(
+                        '00:${_timeLeft.toString().padLeft(2, '0')}',
+                        style: const TextStyle(color: AppTheme.marsRed, fontWeight: FontWeight.bold),
+                      ),
+                    ],
+                  ),
+                ],
               ),
               const SizedBox(height: 24),
               Container(

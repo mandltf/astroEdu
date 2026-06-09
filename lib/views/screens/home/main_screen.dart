@@ -6,7 +6,8 @@ import '../ai/astrobot_screen.dart';
 import '../profile/profile_screen.dart';
 
 class MainScreen extends StatefulWidget {
-  const MainScreen({super.key});
+  final int initialIndex;
+  const MainScreen({super.key, this.initialIndex = 0});
 
   @override
   State<MainScreen> createState() => _MainScreenState();
@@ -14,14 +15,27 @@ class MainScreen extends StatefulWidget {
 
 class _MainScreenState extends State<MainScreen> {
   int _currentIndex = 0;
+  final GlobalKey<ProfileScreenState> _profileKey = GlobalKey<ProfileScreenState>();
   
   // Lazy loading: widget dibuat saat pertama kali dibuka
-  final List<Widget?> _screens = [
+  late final List<Widget?> _screens = [
     const HomeScreen(),
     null, // Game akan dibuat saat tab Game dipilih
     const AstroBotScreen(),
-    const ProfileScreen(),
+    ProfileScreen(key: _profileKey),
   ];
+
+  @override
+  void initState() {
+    super.initState();
+    _currentIndex = widget.initialIndex;
+    if (_currentIndex == 3) {
+      // Need a slight delay to allow the key to attach before calling loadProfile
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _profileKey.currentState?.loadProfile();
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -60,6 +74,9 @@ class _MainScreenState extends State<MainScreen> {
               setState(() {
                 _screens[1] = const CatchStarGame();
               });
+            }
+            if (i == 3) {
+              _profileKey.currentState?.loadProfile();
             }
             setState(() {
               _currentIndex = i;

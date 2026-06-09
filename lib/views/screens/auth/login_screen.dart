@@ -26,9 +26,17 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   Future<void> _checkBiometric() async {
-    // Cek apakah perangkat mendukung biometrik
     final available = await AuthService.instance.isBiometricAvailable();
-    if (mounted) setState(() => _biometricAvailable = available);
+    bool enabled = false;
+    if (available) {
+      final userId = await AuthService.instance.getLastUserId();
+      if (userId != null) {
+        enabled = await AuthService.instance.isBiometricEnabledForUser(userId);
+      }
+    }
+    if (mounted) {
+      setState(() => _biometricAvailable = available && enabled);
+    }
   }
 
   Future<void> _login() async {
@@ -51,8 +59,8 @@ class _LoginScreenState extends State<LoginScreen> {
 
   Future<void> _biometricLogin() async {
     // Cek apakah ada session tersimpan (user pernah login sebelumnya)
-    final hasSession = await AuthService.instance.hasSavedSession();
-    if (!hasSession) {
+    final userId = await AuthService.instance.getLastUserId();
+    if (userId == null) {
       _showError('Silakan login dengan email terlebih dahulu untuk menyimpan session');
       return;
     }

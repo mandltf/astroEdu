@@ -7,6 +7,7 @@ class FenomenaModel {
   final List<String> poinPelajaran;
   final String sumber;
   final String waktuTerbaikUtc;
+  final String negara;
 
   FenomenaModel({
     this.id,
@@ -17,6 +18,7 @@ class FenomenaModel {
     required this.poinPelajaran,
     required this.sumber,
     required this.waktuTerbaikUtc,
+    this.negara = 'Indonesia',
   });
 
   // Convert to Map for database
@@ -30,6 +32,7 @@ class FenomenaModel {
       'poin_pelajaran': poinPelajaran.join('|'),
       'sumber': sumber,
       'waktu_terbaik_utc': waktuTerbaikUtc,
+      'negara': negara,
     };
   }
 
@@ -44,6 +47,7 @@ class FenomenaModel {
       poinPelajaran: (map['poin_pelajaran'] as String).split('|'),
       sumber: map['sumber'] as String,
       waktuTerbaikUtc: map['waktu_terbaik_utc'] as String,
+      negara: map['negara'] as String? ?? 'Indonesia',
     );
   }
 }

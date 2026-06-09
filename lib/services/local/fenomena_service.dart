@@ -10,82 +10,94 @@ class FenomenaService {
 
   // Data statis untuk seed
   final List<Map<String, dynamic>> _seedData = [
+    // --- INDONESIA ---
     {
-      'nama': "Gerhana Bulan Total / Blood Moon",
-      'tanggal': "2026-03-03",
-      'deskripsi_singkat': "Bulan tampak merah total saat masuk umbra Bumi.",
+      'nama': "Gerhana Matahari Cincin Indonesia",
+      'tanggal': "2026-06-10",
+      'deskripsi_singkat': "Cincin api di langit Indonesia.",
       'deskripsi_lengkap':
-          "Gerhana Bulan Total terjadi saat Bulan, Bumi, dan Matahari sejajar dalam satu garis lurus. Saat itu, Bulan akan masuk ke dalam bayangan umbra Bumi dan akan tampak berwarna merah gelap. Warna merah ini disebabkan oleh cahaya Matahari yang dibiaskan oleh atmosfer Bumi.",
+          "Gerhana Matahari Cincin terlihat sangat jelas melintasi wilayah Indonesia, terutama bagian ekuator. Saat Bulan berada sedikit lebih jauh dari Bumi, ukurannya tidak cukup besar untuk menutupi seluruh piringan Matahari, sehingga menciptakan bentuk cincin terang.",
       'poin_pelajaran':
-          " Gerhana Bulan terjadi saat Bumi berada di antara Matahari dan Bulan.| Warna merah terjadi karena hamburan Rayleigh di atmosfer Bumi.| Gerhana bulan aman dilihat tanpa pelindung mata.",
-      'sumber': "BMKG, NASA",
-      'waktu_terbaik_utc': "18:00",
+          " Terjadi saat Bulan berada di apogee (titik terjauh dari Bumi).| Tidak aman dilihat dengan mata telanjang tanpa kacamata gerhana khusus.| Jalur gerhana melintasi beberapa pulau besar di Indonesia.",
+      'sumber': "BMKG, Observatorium Bosscha",
+      'waktu_terbaik_utc': "03:00",
+      'negara': "Indonesia",
     },
     {
-      'nama': "Hujan Meteor Lyrid",
-      'tanggal': "2026-04-22",
-      'deskripsi_singkat': "Hujan meteor Lyrid, puncaknya 22-23 April.",
+      'nama': "Uji Coba Fenomena Astronomi Dummy",
+      'tanggal': "2026-06-09",
+      'deskripsi_singkat': "Data dummy untuk menguji pengingat waktu.",
       'deskripsi_lengkap':
-          "Lyrid adalah salah satu hujan meteor tertua yang diketahui, telah diamati selama lebih dari 2000 tahun. Hujan meteor ini terjadi ketika Bumi melewati jalur debu yang ditinggalkan oleh komet C/1861 G1 Thatcher.",
+          "Fenomena dummy ini disiapkan agar jam pengamatan dapat diedit dengan mudah saat pengujian notifikasi dan tampilan waktu lokal.",
       'poin_pelajaran':
-          " Meteor adalah debu/komet yang terbakar saat masuk atmosfer Bumi.| Lyrid terjadi setiap tahun pada bulan April.| Puncak terbaik diamati dari lokasi gelap setelah tengah malam.",
-      'sumber': "In-The-Sky.org, NASA",
-      'waktu_terbaik_utc': "02:00",
+          " Dapat dipakai untuk menguji pengingat sehari sebelum dan tepat pada jam kejadian.| Waktu di hardcode agar mudah diedit saat pengembangan.| Gunakan data ini untuk verifikasi zona waktu terdeteksi.",
+      'sumber': "Data dummy internal AstroEdu",
+      'waktu_terbaik_utc': "20:53",
+      'negara': "Indonesia",
     },
     {
-      'nama': "Hujan Meteor Eta Aquarid",
-      'tanggal': "2026-05-05",
-      'deskripsi_singkat': "Hujan meteor Eta Aquarid, puncaknya 5-6 Mei.",
+      'nama': "Hujan Meteor Ekuator (Aquarid)",
+      'tanggal': "2026-06-12",
+      'deskripsi_singkat': "Hujan meteor tampak jelas dari khatulistiwa.",
       'deskripsi_lengkap':
-          "Hujan meteor Eta Aquarid berasal dari debu Komet Halley. Ini adalah salah satu dari dua hujan meteor besar yang berasal dari komet terkenal ini.",
+          "Fenomena hujan meteor Aquarid yang sangat aktif di wilayah khatulistiwa, memberikan pertunjukan langit yang spektakuler bagi pengamat di Indonesia dengan tingkat aktivitas hingga 50 meteor per jam.",
       'poin_pelajaran':
-          " Meteor ini berasal dari Komet Halley.| Kecepatan meteor bisa mencapai 66 km/s.| Waktu terbaik mengamati adalah sebelum fajar (pukul 03.00 - 05.00).",
-      'sumber': "In-The-Sky.org, NASA",
+          " Sangat baik diamati dari garis khatulistiwa.| Puncak aktivitas meteor mencapai 50 meteor per jam.| Pengamatan terbaik dilakukan di tempat minim polusi cahaya.",
+      'sumber': "LAPAN, In-The-Sky.org",
       'waktu_terbaik_utc': "20:00",
+      'negara': "Indonesia",
+    },
+    // --- COLOMBIA ---
+    {
+      'nama': "Eclipse Solar Total Sudamérica",
+      'tanggal': "2026-06-11",
+      'deskripsi_singkat': "Gerhana Matahari Total di Kolombia.",
+      'deskripsi_lengkap':
+          "Sebuah gerhana matahari total yang langka melintasi negara Kolombia dan beberapa negara Amerika Selatan lainnya. Langit akan berubah menjadi gelap seperti malam hari selama beberapa menit.",
+      'poin_pelajaran':
+          " Korona matahari dapat terlihat dengan jelas.| Suhu udara dapat turun drastis selama puncak gerhana.| Terlihat jelas dari wilayah Andes, Kolombia.",
+      'sumber': "NASA, Observatorio Astronómico Nacional de Colombia",
+      'waktu_terbaik_utc': "17:00",
+      'negara': "Colombia",
     },
     {
-      'nama': "Hujan Meteor Perseid",
-      'tanggal': "2026-08-12",
-      'deskripsi_singkat': "Hujan meteor Perseid, puncaknya 12-13 Agustus.",
+      'nama': "Lluvia de Meteoros Andina",
+      'tanggal': "2026-06-13",
+      'deskripsi_singkat': "Hujan meteor yang indah melintasi pegunungan Andes.",
       'deskripsi_lengkap':
-          "Perseid adalah hujan meteor paling populer dan paling terang. Hujan meteor ini terjadi ketika Bumi melewati jalur debu yang ditinggalkan oleh komet Swift-Tuttle.",
+          "Hujan meteor lokal yang sangat indah saat diamati dari dataran tinggi Andes di Kolombia. Udara tipis pegunungan membuat meteor tampak lebih terang dan jelas.",
       'poin_pelajaran':
-          " Meteor Perseid berasal dari rasi Perseus.| Komet induknya adalah Swift-Tuttle.| Waktu terbaik mengamati mulai tengah malam hingga subuh.",
-      'sumber': "In-The-Sky.org, NASA",
-      'waktu_terbaik_utc': "21:00",
-    },
-    {
-      'nama': "Hujan Meteor Geminid",
-      'tanggal': "2026-12-13",
-      'deskripsi_singkat': "Hujan meteor Geminid, puncaknya 13-14 Desember.",
-      'deskripsi_lengkap':
-          "Geminid sering disebut sebagai hujan meteor terbaik tahun ini. Hujan meteor ini berasal dari asteroid 3200 Phaethon, yang jarang diketahui.",
-      'poin_pelajaran':
-          " Sumber Geminid adalah asteroid 3200 Phaethon.| Meteor ini bisa terlihat dari Indonesia mulai malam hingga dini hari.| Puncak aktivitas hingga 150 meteor per jam di lokasi tanpa polusi cahaya.",
-      'sumber': "NASA, Starwalk",
-      'waktu_terbaik_utc': "22:00",
-    },
-    {
-      'nama': "Supermoon Pertama",
-      'tanggal': "2026-08-01",
-      'deskripsi_singkat': "Supermoon: Bulan tampak lebih besar dan terang.",
-      'deskripsi_lengkap':
-          "Supermoon terjadi saat bulan purnama bertepatan dengan perigee (jarak terdekat Bulan ke Bumi). Saat ini, Bulan akan tampak 14% lebih besar dan 30% lebih terang dari bulan purnama normal.",
-      'poin_pelajaran':
-          " Bulan purnama di perigee (jarak terdekat).| Tampak lebih besar dan terang dari biasanya.| Dapat diamati dengan mata telanjang sepanjang malam.",
-      'sumber': "NASA, BMKG",
-      'waktu_terbaik_utc': "12:00",
+          " Ketinggian pegunungan Andes mengurangi distorsi atmosfer.| Meteor terlihat lebih terang dan tajam.| Waktu terbaik diamati menjelang fajar.",
+      'sumber': "Red de Astronomía de Colombia",
+      'waktu_terbaik_utc': "09:00",
+      'negara': "Colombia",
     },
   ];
 
+  Future<void>? _seedFuture;
+
   Future<void> _seedDatabase() async {
     if (_initialized) return;
+    if (_seedFuture != null) {
+      await _seedFuture;
+      return;
+    }
     
+    _seedFuture = _doSeedDatabase();
+    await _seedFuture;
+    _initialized = true;
+    _seedFuture = null;
+  }
+
+  Future<void> _doSeedDatabase() async {
     final db = DatabaseHelper.instance;
     for (var fenomena in _seedData) {
-      await db.insertFenomenaIfNotExists(fenomena);
+      try {
+        await db.insertFenomenaIfNotExists(fenomena);
+      } catch (e) {
+        // Ignored if duplicate
+      }
     }
-    _initialized = true;
   }
 
   Future<List<FenomenaModel>> get semuaFenomena async {
@@ -135,19 +147,28 @@ class FenomenaService {
     }
   }
 
-  Future<FenomenaModel?> getFenomenaHariIni() async {
+  Future<FenomenaModel?> getFenomenaHariIni(String negaraUser) async {
     await _seedDatabase();
     final sekarang = DateTime.now();
     final tanggalString = sekarang.toIso8601String().split('T')[0];
     final semua = await semuaFenomena;
+    
+    // Filter by country
+    final fenomenaNegara = semua.where((f) => f.negara.toLowerCase() == negaraUser.toLowerCase()).toList();
+    if (fenomenaNegara.isEmpty) {
+      // Fallback jika tidak ada fenomena khusus negara tersebut, cari yang terdekat global
+      return semua.firstWhere((f) => DateTime.parse(f.tanggal).isAfter(sekarang), orElse: () => semua.last);
+    }
 
     try {
-      return semua.firstWhere((f) => f.tanggal == tanggalString);
+      return fenomenaNegara.firstWhere((f) => f.tanggal == tanggalString);
     } catch (e) {
-      return semua.firstWhere(
-        (f) => DateTime.parse(f.tanggal).isAfter(sekarang),
-        orElse: () => semua.last,
-      );
+      // Cari yang terdekat setelah hari ini
+      try {
+        return fenomenaNegara.firstWhere((f) => DateTime.parse(f.tanggal).isAfter(sekarang));
+      } catch (e) {
+        return fenomenaNegara.last; // Fallback
+      }
     }
   }
 }
