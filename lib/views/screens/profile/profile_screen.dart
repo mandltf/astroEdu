@@ -186,72 +186,268 @@ class ProfileScreenState extends State<ProfileScreen> with WidgetsBindingObserve
 
   Future<void> _showSaranDialog() async {
     TextEditingController controller = TextEditingController(text: _saran);
+    bool isEditing = _saran.isEmpty;
     await showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: AppTheme.cardBg,
-        title: const Text('Saran untuk mk TPM', style: TextStyle(color: AppTheme.starlight)),
-        content: TextField(
-          controller: controller,
-          maxLines: 3,
-          style: const TextStyle(color: AppTheme.starlight),
-          decoration: const InputDecoration(hintText: 'Tulis saran Anda...'),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Batal', style: TextStyle(color: AppTheme.marsRed)),
-          ),
-          ElevatedButton(
-            onPressed: () async {
-              final userId = _user!['id'];
-              final saranBaru = controller.text.trim();
-              await DatabaseHelper.instance.saveSaranKesan(userId, saranBaru, _kesan);
-              setState(() => _saran = saranBaru);
-              if (mounted) Navigator.pop(context);
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Saran disimpan'), backgroundColor: AppTheme.nebulaGreen),
-              );
-            },
-            child: const Text('Simpan'),
-          ),
-        ],
+      builder: (context) => StatefulBuilder(
+        builder: (context, setStateDialog) {
+          return Dialog(
+            backgroundColor: Colors.transparent,
+            insetPadding: const EdgeInsets.all(20),
+            child: Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(24),
+              decoration: BoxDecoration(
+                color: AppTheme.cardBg,
+                borderRadius: BorderRadius.circular(24),
+                border: Border.all(color: AppTheme.nebulaGreen.withOpacity(0.3)),
+                boxShadow: [
+                  BoxShadow(
+                    color: AppTheme.nebulaGreen.withOpacity(0.1),
+                    blurRadius: 16,
+                    offset: const Offset(0, 8),
+                  ),
+                ],
+              ),
+              child: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Icon(Icons.feedback_outlined, color: AppTheme.nebulaGreen, size: 28),
+                        const SizedBox(width: 12),
+                        const Expanded(
+                          child: Text('Saran untuk mk TPM', style: TextStyle(color: AppTheme.starlight, fontSize: 20, fontWeight: FontWeight.bold)),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 24),
+                    if (_saran.isNotEmpty && !isEditing) ...[
+                      const Text('Saran Anda saat ini:', style: TextStyle(color: Color(0xFF9CA3AF), fontSize: 14)),
+                      const SizedBox(height: 8),
+                      _buildFeedbackCard('Saran Tersimpan', _saran, Icons.check_circle_outline, AppTheme.nebulaGreen),
+                    ],
+                    if (isEditing) ...[
+                      if (_saran.isNotEmpty) ...[
+                        const Text('Ubah Saran:', style: TextStyle(color: Color(0xFF9CA3AF), fontSize: 14)),
+                        const SizedBox(height: 8),
+                      ],
+                      TextField(
+                        controller: controller,
+                        maxLines: 4,
+                        style: const TextStyle(color: AppTheme.starlight),
+                        decoration: InputDecoration(
+                          hintText: 'Tulis saran Anda di sini...',
+                          hintStyle: const TextStyle(color: Color(0xFF6B7280)),
+                          filled: true,
+                          fillColor: AppTheme.deepSpace.withOpacity(0.5),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(16),
+                            borderSide: BorderSide.none,
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(16),
+                            borderSide: const BorderSide(color: AppTheme.nebulaGreen),
+                          ),
+                        ),
+                      ),
+                    ],
+                    const SizedBox(height: 24),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: [
+                        TextButton(
+                          onPressed: () {
+                            if (isEditing && _saran.isNotEmpty) {
+                              setStateDialog(() => isEditing = false);
+                              controller.text = _saran; // Reset input
+                            } else {
+                              Navigator.pop(context);
+                            }
+                          },
+                          child: Text(isEditing && _saran.isNotEmpty ? 'Batal Edit' : 'Tutup', style: const TextStyle(color: AppTheme.marsRed, fontWeight: FontWeight.bold)),
+                        ),
+                        const SizedBox(width: 12),
+                        if (!isEditing)
+                          ElevatedButton(
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: AppTheme.nebulaGreen.withOpacity(0.2),
+                              foregroundColor: AppTheme.nebulaGreen,
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                              elevation: 0,
+                            ),
+                            onPressed: () {
+                              setStateDialog(() {
+                                isEditing = true;
+                              });
+                            },
+                            child: const Text('Edit Saran', style: TextStyle(fontWeight: FontWeight.bold)),
+                          )
+                        else
+                          ElevatedButton(
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: AppTheme.nebulaGreen,
+                              foregroundColor: AppTheme.deepSpace,
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                            ),
+                            onPressed: () async {
+                              final userId = _user!['id'];
+                              final saranBaru = controller.text.trim();
+                              await DatabaseHelper.instance.saveSaranKesan(userId, saranBaru, _kesan);
+                              setState(() => _saran = saranBaru);
+                              if (mounted) Navigator.pop(context);
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(content: Text('Saran disimpan'), backgroundColor: AppTheme.nebulaGreen),
+                              );
+                            },
+                            child: const Text('Simpan', style: TextStyle(fontWeight: FontWeight.bold)),
+                          ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          );
+        }
       ),
     );
   }
 
   Future<void> _showKesanDialog() async {
     TextEditingController controller = TextEditingController(text: _kesan);
+    bool isEditing = _kesan.isEmpty;
     await showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: AppTheme.cardBg,
-        title: const Text('Kesan terhadap mk TPM', style: TextStyle(color: AppTheme.starlight)),
-        content: TextField(
-          controller: controller,
-          maxLines: 3,
-          style: const TextStyle(color: AppTheme.starlight),
-          decoration: const InputDecoration(hintText: 'Tulis kesan Anda...'),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Batal', style: TextStyle(color: AppTheme.marsRed)),
-          ),
-          ElevatedButton(
-            onPressed: () async {
-              final userId = _user!['id'];
-              final kesanBaru = controller.text.trim();
-              await DatabaseHelper.instance.saveSaranKesan(userId, _saran, kesanBaru);
-              setState(() => _kesan = kesanBaru);
-              if (mounted) Navigator.pop(context);
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Kesan disimpan'), backgroundColor: AppTheme.nebulaGreen),
-              );
-            },
-            child: const Text('Simpan'),
-          ),
-        ],
+      builder: (context) => StatefulBuilder(
+        builder: (context, setStateDialog) {
+          return Dialog(
+            backgroundColor: Colors.transparent,
+            insetPadding: const EdgeInsets.all(20),
+            child: Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(24),
+              decoration: BoxDecoration(
+                color: AppTheme.cardBg,
+                borderRadius: BorderRadius.circular(24),
+                border: Border.all(color: AppTheme.auroraBlue.withOpacity(0.3)),
+                boxShadow: [
+                  BoxShadow(
+                    color: AppTheme.auroraBlue.withOpacity(0.1),
+                    blurRadius: 16,
+                    offset: const Offset(0, 8),
+                  ),
+                ],
+              ),
+              child: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Icon(Icons.emoji_emotions_outlined, color: AppTheme.auroraBlue, size: 28),
+                        const SizedBox(width: 12),
+                        const Expanded(
+                          child: Text('Kesan untuk mk TPM', style: TextStyle(color: AppTheme.starlight, fontSize: 20, fontWeight: FontWeight.bold)),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 24),
+                    if (_kesan.isNotEmpty && !isEditing) ...[
+                      const Text('Kesan Anda saat ini:', style: TextStyle(color: Color(0xFF9CA3AF), fontSize: 14)),
+                      const SizedBox(height: 8),
+                      _buildFeedbackCard('Kesan Tersimpan', _kesan, Icons.check_circle_outline, AppTheme.auroraBlue),
+                    ],
+                    if (isEditing) ...[
+                      if (_kesan.isNotEmpty) ...[
+                        const Text('Ubah Kesan:', style: TextStyle(color: Color(0xFF9CA3AF), fontSize: 14)),
+                        const SizedBox(height: 8),
+                      ],
+                      TextField(
+                        controller: controller,
+                        maxLines: 4,
+                        style: const TextStyle(color: AppTheme.starlight),
+                        decoration: InputDecoration(
+                          hintText: 'Tulis kesan Anda di sini...',
+                          hintStyle: const TextStyle(color: Color(0xFF6B7280)),
+                          filled: true,
+                          fillColor: AppTheme.deepSpace.withOpacity(0.5),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(16),
+                            borderSide: BorderSide.none,
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(16),
+                            borderSide: const BorderSide(color: AppTheme.auroraBlue),
+                          ),
+                        ),
+                      ),
+                    ],
+                    const SizedBox(height: 24),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: [
+                        TextButton(
+                          onPressed: () {
+                            if (isEditing && _kesan.isNotEmpty) {
+                              setStateDialog(() => isEditing = false);
+                              controller.text = _kesan; // Reset input
+                            } else {
+                              Navigator.pop(context);
+                            }
+                          },
+                          child: Text(isEditing && _kesan.isNotEmpty ? 'Batal Edit' : 'Tutup', style: const TextStyle(color: AppTheme.marsRed, fontWeight: FontWeight.bold)),
+                        ),
+                        const SizedBox(width: 12),
+                        if (!isEditing)
+                          ElevatedButton(
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: AppTheme.auroraBlue.withOpacity(0.2),
+                              foregroundColor: AppTheme.auroraBlue,
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                              elevation: 0,
+                            ),
+                            onPressed: () {
+                              setStateDialog(() {
+                                isEditing = true;
+                              });
+                            },
+                            child: const Text('Edit Kesan', style: TextStyle(fontWeight: FontWeight.bold)),
+                          )
+                        else
+                          ElevatedButton(
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: AppTheme.auroraBlue,
+                              foregroundColor: AppTheme.starlight,
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                            ),
+                            onPressed: () async {
+                              final userId = _user!['id'];
+                              final kesanBaru = controller.text.trim();
+                              await DatabaseHelper.instance.saveSaranKesan(userId, _saran, kesanBaru);
+                              setState(() => _kesan = kesanBaru);
+                              if (mounted) Navigator.pop(context);
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(content: Text('Kesan disimpan'), backgroundColor: AppTheme.nebulaGreen),
+                              );
+                            },
+                            child: const Text('Simpan', style: TextStyle(fontWeight: FontWeight.bold)),
+                          ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          );
+        }
       ),
     );
   }
@@ -365,15 +561,13 @@ class ProfileScreenState extends State<ProfileScreen> with WidgetsBindingObserve
               ),
               _menuTile(
                 icon: Icons.feedback_outlined,
-                title: 'Saran',
+                title: _saran.isEmpty ? 'Tulis Saran' : 'Edit Saran',
                 onTap: _showSaranDialog,
-                trailing: _saran.isNotEmpty ? Text(_saran.length > 30 ? '${_saran.substring(0, 30)}...' : _saran, style: const TextStyle(color: AppTheme.nebulaGreen, fontSize: 12)) : null,
               ),
               _menuTile(
                 icon: Icons.emoji_emotions_outlined,
-                title: 'Kesan',
+                title: _kesan.isEmpty ? 'Tulis Kesan' : 'Edit Kesan',
                 onTap: _showKesanDialog,
-                trailing: _kesan.isNotEmpty ? Text(_kesan.length > 30 ? '${_kesan.substring(0, 30)}...' : _kesan, style: const TextStyle(color: AppTheme.nebulaGreen, fontSize: 12)) : null,
               ),
               if (_deviceSupportsBiometric)
                 Card(
@@ -421,6 +615,69 @@ class ProfileScreenState extends State<ProfileScreen> with WidgetsBindingObserve
         title: Text(title, style: TextStyle(color: isDestructive ? AppTheme.marsRed : AppTheme.starlight)),
         trailing: trailing ?? const Icon(Icons.chevron_right, color: AppTheme.auroraBlue),
         onTap: onTap,
+      ),
+    );
+  }
+
+  Widget _buildFeedbackCard(String title, String content, IconData icon, Color color) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 16),
+      width: double.infinity,
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [
+            color.withOpacity(0.15),
+            color.withOpacity(0.05),
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: color.withOpacity(0.3)),
+        boxShadow: [
+          BoxShadow(
+            color: color.withOpacity(0.1),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: color.withOpacity(0.2),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Icon(icon, color: color, size: 20),
+              ),
+              const SizedBox(width: 12),
+              Text(
+                title,
+                style: const TextStyle(
+                  color: AppTheme.starlight,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 18,
+                  letterSpacing: 0.5,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          Text(
+            content,
+            style: const TextStyle(
+              color: AppTheme.starlight,
+              height: 1.6,
+              fontSize: 15,
+            ),
+          ),
+        ],
       ),
     );
   }

@@ -9,7 +9,7 @@ class AppConstants {
   
   // Wikipedia API
   static const String wikipediaApiUrl = 'https://id.wikipedia.org/api/rest_v1/page/summary/';
-  static const String wikipediaSearchUrl = 'https://id.wikipedia.org/w/api.php';  // <-- tambahkan ini
+  static const String wikipediaSearchUrl = 'https://id.wikipedia.org/w/api.php';  
   
   // Encryption
   static const String encryptionKey = 'AstroEdu2024SecretKey12345678901';

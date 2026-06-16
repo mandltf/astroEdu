@@ -72,30 +72,9 @@ class _QuizScreenState extends State<QuizScreen> {
         });
       } else {
         _timer?.cancel();
-        _onTimeUp();
+        _finishQuiz(isTimeUp: true);
       }
     });
-  }
-
-  void _onTimeUp() {
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (_) => AlertDialog(
-        backgroundColor: AppTheme.cardBg,
-        title: const Text('Waktu Habis!', style: TextStyle(color: AppTheme.marsRed)),
-        content: const Text('Waktu pengerjaan kuis telah habis.', style: TextStyle(color: AppTheme.starlight)),
-        actions: [
-          ElevatedButton(
-            onPressed: () {
-              Navigator.pop(context);
-              _finishQuiz(isTimeUp: true);
-            },
-            child: const Text('Lanjut'),
-          ),
-        ],
-      ),
-    );
   }
 
   @override
@@ -339,62 +318,142 @@ class _QuizScreenState extends State<QuizScreen> {
       'played_at': DateTime.now().toIso8601String(),
     });
     
-    if (isTimeUp) {
-      _goToProfile();
-    } else {
-      _showResultDialog();
-    }
+    _showResultDialog(isTimeUp: isTimeUp);
   }
 
-  void _goToProfile() {
-    Navigator.pushAndRemoveUntil(
-      context,
-      MaterialPageRoute(builder: (_) => const MainScreen(initialIndex: 3)),
-      (route) => false,
-    );
+  void _goToPreQuiz() {
+    setState(() {
+      _isQuizStarted = false;
+      _score = 0;
+      _currentIndex = 0;
+      _answered = false;
+      _selectedOption = null;
+      _loadingHistory = true;
+    });
+    _checkHistory();
   }
 
-  void _showResultDialog() {
+  void _showResultDialog({bool isTimeUp = false}) {
     showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (_) => AlertDialog(
-        backgroundColor: AppTheme.cardBg,
-        title: Text(
-          _score >= _questions.length * 0.7 ? '🏆 Luar Biasa!' : '🚀 Terus Belajar!',
-          style: const TextStyle(color: AppTheme.starlight),
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              'Skor kamu: $_score / ${_questions.length}',
-              style: const TextStyle(color: AppTheme.starlight, fontSize: 18),
+      builder: (_) => Dialog(
+        backgroundColor: Colors.transparent,
+        insetPadding: const EdgeInsets.all(20),
+        child: Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(24),
+          decoration: BoxDecoration(
+            color: AppTheme.cardBg,
+            borderRadius: BorderRadius.circular(24),
+            border: Border.all(
+              color: isTimeUp ? AppTheme.marsRed.withOpacity(0.3) : AppTheme.auroraBlue.withOpacity(0.3),
             ),
-            const SizedBox(height: 8),
-            Text(
-              _score >= _questions.length * 0.8
-                  ? 'Kamu ahli dalam topik ini!'
-                  : _score >= _questions.length * 0.6
-                      ? 'Cukup bagus, pelajari lagi yuk!'
-                      : 'Baca materi dulu ya biar lebih paham!',
-              style: const TextStyle(color: Color(0xFF9CA3AF)),
-            ),
-          ],
+            boxShadow: [
+              BoxShadow(
+                color: (isTimeUp ? AppTheme.marsRed : AppTheme.auroraBlue).withOpacity(0.15),
+                blurRadius: 20,
+                offset: const Offset(0, 10),
+              ),
+            ],
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                isTimeUp ? Icons.timer_off_outlined : (_score >= _questions.length * 0.7 ? Icons.emoji_events : Icons.rocket_launch),
+                size: 64,
+                color: isTimeUp ? AppTheme.marsRed : (_score >= _questions.length * 0.7 ? AppTheme.solarGold : AppTheme.auroraBlue),
+              ),
+              const SizedBox(height: 16),
+              Text(
+                isTimeUp 
+                  ? 'Waktu Habis!' 
+                  : (_score >= _questions.length * 0.7 ? '🏆 Luar Biasa!' : '🚀 Terus Belajar!'),
+                style: TextStyle(
+                  color: isTimeUp ? AppTheme.marsRed : AppTheme.starlight,
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 12),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+                decoration: BoxDecoration(
+                  color: AppTheme.deepSpace.withOpacity(0.3),
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: AppTheme.cardBorder),
+                ),
+                child: Column(
+                  children: [
+                    const Text('Skor Kamu', style: TextStyle(color: Color(0xFF9CA3AF), fontSize: 14)),
+                    const SizedBox(height: 4),
+                    Text(
+                      '$_score / ${_questions.length}',
+                      style: const TextStyle(
+                        color: AppTheme.nebulaGreen,
+                        fontSize: 32,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 16),
+              Text(
+                isTimeUp
+                    ? 'Sayang sekali, waktumu habis sebelum menyelesaikan semua pertanyaan kuis.'
+                    : (_score >= _questions.length * 0.8
+                        ? 'Kamu ahli dalam topik ini!'
+                        : _score >= _questions.length * 0.6
+                            ? 'Cukup bagus, pelajari lagi yuk!'
+                            : 'Baca materi dulu ya biar lebih paham!'),
+                style: const TextStyle(color: Color(0xFFD1D5DB), fontSize: 15),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 24),
+              Row(
+                children: [
+                  if (!isTimeUp)
+                    Expanded(
+                      child: OutlinedButton(
+                        style: OutlinedButton.styleFrom(
+                          side: const BorderSide(color: AppTheme.auroraBlue),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                        ),
+                        onPressed: () => Navigator.pop(context),
+                        child: const Text('Tutup', style: TextStyle(color: AppTheme.auroraBlue, fontWeight: FontWeight.bold)),
+                      ),
+                    ),
+                  if (!isTimeUp) const SizedBox(width: 12),
+                  Expanded(
+                    flex: 2,
+                    child: ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: isTimeUp ? AppTheme.marsRed : AppTheme.auroraBlue,
+                        foregroundColor: isTimeUp ? Colors.white : AppTheme.starlight,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        elevation: 0,
+                      ),
+                      onPressed: () {
+                        Navigator.pop(context);
+                        _goToPreQuiz();
+                      },
+                      child: Text(
+                        isTimeUp ? 'Main Lagi' : 'Kembali ke Halaman Kuis',
+                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Tutup', style: TextStyle(color: AppTheme.auroraBlue)),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              Navigator.pop(context);
-              _goToProfile();
-            },
-            child: const Text('Selesai & Lihat Profil'),
-          ),
-        ],
       ),
     );
   }
